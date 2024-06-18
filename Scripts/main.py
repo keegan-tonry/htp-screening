@@ -87,27 +87,24 @@ def process_directory(root_dir):
             rfc_data = execute_htp(file_path)
             if rfc_data == None:
                 continue
-            all_data.append([filename])
+            all_data.append([file_path])
             all_data.extend(rfc_data)
             all_data.append([])
 
         if all_data:
             headers = ['Channel', 'Resilience', 'Flow', 'Coarseness']
-            output_filepath = os.path.join(dirpath, "summary.csv")
-            with open(output_filepath, 'w', newline='') as csvfile:
+            output_file_path = os.path.join(root_dir, "summary.csv")
+            with open(output_file_path, 'w', newline='') as csvfile:
                 csvwriter = csv.writer(csvfile)
                 for entry in all_data:
                     if isinstance(entry, list) and len(entry) == 1:
                         # Write the file name
                         csvwriter.writerow(entry)
+                        csvwriter.writerow(headers)  # Write headers after the filename
                     elif entry:
-                        # Write the headers if entry contains channel data
-                        csvwriter.writerow(headers)
-                        headers = []  # Ensure headers are only written once per file
                         csvwriter.writerow(entry)
                     else:
-                        # Write an empty row
-                        csvwriter.writerow([])
+                        csvwriter.writerow([])  # Write an empty row
 
 def main():
     dir_name = sys.argv[1]

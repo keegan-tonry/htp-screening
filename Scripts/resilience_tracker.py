@@ -35,6 +35,12 @@ def track_void(image, threshold, step):
 
 def check_resilience(file, channel, R_offset=0.1, percent_threshold_loss = 0.8, percent_threshold_gain = 1.2, frame_step=1, frame_start_percent=0.8, frame_stop_percent=1):
     image = file[:,:,:,channel]
+
+    # Error Checking: Empty Image
+    if (images == 0).any():
+        verdict = "Data not available for this channel."
+        return verdict, fig
+    
     largest_void_lst = track_void(image, R_offset, frame_step)
     start_index = int(len(largest_void_lst) * frame_start_percent)
     stop_index = int(len(largest_void_lst) * frame_stop_percent)

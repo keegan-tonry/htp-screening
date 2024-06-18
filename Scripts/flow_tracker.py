@@ -25,10 +25,13 @@ def check_flow(file, channel, decay_threshold = 1/np.exp(1), min_corr_len = 25, 
     #Cutoff magnitude to consider a vector to be null; also helps to avoid divide-by-zero errors
     flt_tol = 1e-10
 
+    fig, ax = plt.subplots(figsize=(12,10))
+
     def normalVectors(velocities):
         #Find velocity directions
         def normalize(vector):
             magnitude = np.linalg.norm(vector)
+            if magnitude == 0: return np.array([0,0])
             return np.where(magnitude > flt_tol, np.array(vector)/magnitude, np.array([0, 0]))
                 
         normals = np.zeros_like(velocities)
@@ -39,6 +42,11 @@ def check_flow(file, channel, decay_threshold = 1/np.exp(1), min_corr_len = 25, 
         return normals
 
     images = file[:,:,:,channel]
+    
+    # Error Checking: Empty Images
+    if (images == 0).any():
+        verdict = "Data not available for this channel."
+        return verdict, fig
 
     xindices = np.arange(0, images[0].shape[0], downsample)
     yindices = np.arange(0, images[0].shape[1], downsample)
@@ -65,16 +73,15 @@ def check_flow(file, channel, decay_threshold = 1/np.exp(1), min_corr_len = 25, 
         for i in range(0,int(max_pixel_len),int(pixel_bin_width)):
             means[i] = convSum[(radii > i -.5*pixel_bin_width)&(radii < i + .5*pixel_bin_width)].mean()/convSum[0,0]
         try:
-            corrLens[pos] = pix_size*findRoot(range(0,len(means)),means,1/2.718281828)
+            corrLens[pos] = pix_size*findRoot(range(0,len(means)),means,decay_threshold)
         except ValueError:
             corrLens[pos] = 0
-        pos = pos + 1
+        pos += 1
     
     if(len(corrLens[corrLens>min_corr_len])/len(corrLens) > min_fraction):
         verdict = "Contraction possibly detected"
     else:
         verdict = "Contraction not detected"
-    fig, ax = plt.subplots(figsize=(12,10))
-    plt.plot(range(0,len(corrLens)),corrLens)
+    ax.plot(range(0,len(corrLens)),corrLens)
     
     return verdict, fig

@@ -172,7 +172,7 @@ def check_coarse(file, channel, first_frame = 0, last_frame = None, verbose=Fals
 def main():
     file = read_file(sys.argv[1])
     channel = sys.argv[2]
-    results = check_flow(file, channel, filetype)
+    results = check_coarse(file, channel)
 
 if __name__ == "__main__":
     main()
