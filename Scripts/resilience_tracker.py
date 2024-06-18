@@ -1,3 +1,4 @@
+from reader import read_file
 import numpy as np
 import matplotlib.pyplot as plt
 import imageio.v3 as iio
@@ -10,39 +11,6 @@ from numpy.polynomial import Polynomial
 from skimage import measure, io
 from skimage.measure import label, regionprops
 
-def read_file(file_path):
-    acceptable_formats = ('.tiff', '.tif', '.nd2')
-    if (os.path.exists(file_path) and file_path.endswith(acceptable_formats)) == False:
-        return None, None
-    
-    def convert_to_array(file):
-        num_images = file.sizes['t']
-        num_channels = file.sizes['c']
-        height = file.metadata['height']
-        width = file.metadata['width']
-        images = np.zeros((num_images, height, width, num_channels))
-        for i in range(num_channels):
-            for j in range(num_images):
-                frame = np.array(file.get_frame_2D(c=i, t=j))
-                images[j, :, :, i] = frame
-        return images
-    
-    if file_path.endswith('.tiff') or file_path.endswith('.tif'):
-        file = iio.imread(file_path)
-        if len(file.shape) == 3:
-            file = np.reshape(file, (file.shape + (1,)))
-        channels = file.shape[3]
-        filetype = 'tif'
-
-    elif file_path.endswith('.nd2'):
-        file_nd2 = ND2Reader(file_path)
-        file = convert_to_array(file_nd2)
-        channels = len(file_nd2.metadata['channels'])
-
-    else:
-        raise TypeError("Please input valid file type ('.nd2', '.tiff', '.tif')")
-
-    return channels, file
 
 def track_void(image, threshold, step):
     def binarize(frame, offset_threshold):

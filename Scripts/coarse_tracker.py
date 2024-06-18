@@ -4,36 +4,6 @@ import imageio.v3 as iio
 from numpy.polynomial import Polynomial
 from nd2reader import ND2Reader
 
-def read_file(file_path):
-    def convert_to_array(file):
-        num_images = file.sizes['t']
-        num_channels = file.sizes['c']
-        height = file.metadata['height']
-        width = file.metadata['width']
-        images = np.zeros((num_images, height, width, num_channels))
-        for i in range(num_channels):
-            for j in range(num_images):
-                frame = np.array(file.get_frame_2D(c=i, t=j))
-                images[j, :, :, i] = frame
-        return images
-    
-    if file_path.endswith('.tiff') or file_path.endswith('.tif'):
-        file = iio.imread(file_path)
-        if len(file.shape) == 3:
-            file = np.reshape(file, (file.shape + (1,)))
-        channels = file.shape[3]
-        filetype = 'tif'
-
-    elif file_path.endswith('.nd2'):
-        file_nd2 = ND2Reader(file_path)
-        file = convert_to_array(file_nd2)
-        channels = len(file.metadata['channels'])
-
-    else:
-        raise TypeError("Please input valid file type ('.nd2', '.tiff', '.tif')")
-
-    return channels, file
-
 ### function to find the corresponding x-value with the y-value nearest to a given value
 def find_nearest(yarray, xarray, value):
     yarray = np.asarray(yarray)
@@ -111,6 +81,10 @@ def check_coarse(file, channel, first_frame = 0, last_frame = None, verbose=Fals
 
     fig, ax = plt.subplots(figsize=(20,20))
 
+    if (im == 0).all(): # If image is blank, then end program early
+        verdict = "Data not available for this channel."
+        return verdict, fig
+
     max_px_intensity = 1.1*np.max(im)
     bins_width = 3
     poly_deg = 5
@@ -124,8 +98,8 @@ def check_coarse(file, channel, first_frame = 0, last_frame = None, verbose=Fals
 
     set_bins = np.arange(0, max_px_intensity, bins_width)
     bins_num = len(set_bins)
-    i_count, bins = np.histogram(i_frame_data.flatten(), bins=set_bins, density=True)#, density=True
-    f_count, bins = np.histogram(f_frame_data.flatten(), bins=set_bins, density=True)#, density=True
+    i_count, bins = np.histogram(i_frame_data.flatten(), bins=set_bins, density=True)
+    f_count, bins = np.histogram(f_frame_data.flatten(), bins=set_bins, density=True)
     center_bins = (bins[1] - bins[0])/2
     plt_bins = bins[0:-1] + center_bins
     ax.plot(plt_bins, i_count, '^-', ms=4, c='darkred', alpha=0.2, label= "frame " + str(first_frame+1)+" dist")
@@ -196,8 +170,9 @@ def check_coarse(file, channel, first_frame = 0, last_frame = None, verbose=Fals
     return verdict, fig
 
 def main():
-    channels, file = read_file(sys.argv[1])
-    results = check_flow(file, channels, filetype)
+    file = read_file(sys.argv[1])
+    channel = sys.argv[2]
+    results = check_flow(file, channel, filetype)
 
 if __name__ == "__main__":
     main()

@@ -1,43 +1,9 @@
-import imageio.v3 as iio
-import pims
-from nd2reader import ND2Reader
+from reader import read_file
 import os, csv, sys
 from resilience_tracker import check_resilience
 from flow_tracker import check_flow
 from coarse_tracker import check_coarse
 import numpy as np
-
-
-def read_file(file_path):
-    acceptable_formats = ('.tiff', '.tif', '.nd2')
-    if (os.path.exists(file_path) and file_path.endswith(acceptable_formats)) == False:
-        return None
-    
-    def convert_to_array(file):
-        num_images = file.sizes['t']
-        num_channels = file.sizes['c']
-        height = file.metadata['height']
-        width = file.metadata['width']
-        images = np.zeros((num_images, height, width, num_channels))
-        for i in range(num_channels):
-            for j in range(num_images):
-                frame = np.array(file.get_frame_2D(c=i, t=j))
-                images[j, :, :, i] = frame
-        return images
-    
-    if file_path.endswith('.tiff') or file_path.endswith('.tif'):
-        file = iio.imread(file_path)
-        if len(file.shape) == 3:
-            file = np.reshape(file, (file.shape + (1,)))
-        channels = file.shape[3]
-        filetype = 'tif'
-
-    elif file_path.endswith('.nd2'):
-        file_nd2 = ND2Reader(file_path)
-        file = convert_to_array(file_nd2)
-        channels = len(file_nd2.metadata['channels'])
-
-    return file
 
 def execute_htp(filepath, channel_select=-1, resilience=True, flow=True, coarse=True, verbose=False):
     def check(channel, resilience, flow, coarse):
@@ -60,10 +26,11 @@ def execute_htp(filepath, channel_select=-1, resilience=True, flow=True, coarse=
     if (isinstance(file, np.ndarray) == False):
         return None
 
-    channels = file.shape[3]
+    channels = min(file.shape)
+    print('Total Channels:', channels)
     
     if (isinstance(channel_select, int) == False) or channel_select > channels:
-        raise ValueError("Please give correct channel input (0 for all channels, 1 for channel 1, etc)")
+        raise ValueError("Please give correct channel input (-1 for all channels, 0 for channel 1, etc)")
     
     rfc = []
     
@@ -110,6 +77,8 @@ def process_directory(root_dir):
                         csvwriter.writerow([])
     
     for dirpath, dirnames, filenames in os.walk(root_dir):
+
+        dirnames[:] = [d for d in dirnames if d != "Resilience analysis" and d != "contraction_analysis"]
         all_data = []
 
         for filename in filenames:
