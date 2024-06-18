@@ -113,7 +113,7 @@ def check_coarse(file, channel, first_frame = 0, last_frame = None, verbose=Fals
 
     max_px_intensity = 1.1*np.max(im)
     bins_width = 3
-    poly_deg = 40
+    poly_deg = 5
     poly_len = 10000
 
     near_zero_limit = 0.01
