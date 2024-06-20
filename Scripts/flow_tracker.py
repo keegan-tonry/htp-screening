@@ -21,7 +21,7 @@ def check_flow(file, channel, decay_threshold = 1/np.exp(1), min_corr_len = 25, 
     #Cutoff magnitude to consider a vector to be null; also helps to avoid divide-by-zero errors
     flt_tol = 1e-10
 
-    fig, ax = plt.subplots(figsize=(12,10))
+    fig, ax = plt.subplots(figsize=(5,5))
 
     def normalVectors(velocities):
         #Find velocity directions
