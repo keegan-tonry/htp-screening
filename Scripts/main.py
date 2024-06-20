@@ -27,7 +27,7 @@ def execute_htp(filepath, channel_select=-1, resilience=True, flow=True, coarse=
             c = "Coarseness not tested."
             cfig = None
 
-        figpath = Path(filepath).stem + '_channel' + str(channel) + '_graphs.png'
+        figpath = remove_extension(filepath) + '_channel' + str(channel) + '_graphs.png'
         if verbose == True:
             fig = plt.figure(figsize = (15, 5))
             gs = gridspec.GridSpec(1,3)
@@ -89,7 +89,11 @@ def execute_htp(filepath, channel_select=-1, resilience=True, flow=True, coarse=
 
 def remove_extension(filepath):
     if filepath.endswith('.tiff'):
-        return removesuffix()
+        return filepath.removesuffix('.tiff')
+    if filepath.endswith('.tif'):
+        return filepath.removesuffix('.tif')
+    if filepath.endswith('.nd2'):
+        return filepath.removesuffix('.nd2')
 
 def process_directory(root_dir, channel, r = True, f = True, c = True):
     if os.path.isfile(root_dir):

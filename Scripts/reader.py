@@ -29,8 +29,8 @@ def read_file(file_path):
     elif file_path.endswith('.nd2'):
         try:
             file_nd2 = ND2Reader(file_path)
-        except EmptyFileError:
-            file_nd2 = None
+        except:
+            return None
         file = convert_to_array(file_nd2)
         channels = len(file_nd2.metadata['channels'])
 
