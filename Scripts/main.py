@@ -12,46 +12,54 @@ from matplotlib import gridspec
 def execute_htp(filepath, channel_select=-1, resilience=True, flow=True, coarse=True, verbose=True):
     def check(channel, resilience, flow, coarse):
         if resilience == True:
-            r, rfig = check_resilience(file, channel, verbose)
+            r, rfig = check_resilience(file, channel)
         else:
             r = "Resilience not tested"
+            rfig = None
         if flow == True:
-            f, ffig = check_flow(file, channel, verbose)
+            f, ffig = check_flow(file, channel)
         else:
             f = "Flow not tested"
+            ffig = None
         if coarse == True:
-            c, cfig = check_coarse(file, channel, verbose)
+            c, cfig = check_coarse(file, channel)
         else:
             c = "Coarseness not tested."
+            cfig = None
 
         figpath = Path(filepath).stem + '_channel' + str(channel) + '_graphs.png'
         if verbose == True:
-            fig = plt.figure()
+            fig = plt.figure(figsize = (15, 5))
             gs = gridspec.GridSpec(1,3)
 
-            ax1 = rfig.axes[0]
-            ax1.remove()
-            ax1.figure = fig
-            fig.add_axes(ax1)
-            ax1.set_subplotspec(gs[0, 0])
+            if rfig != None:
+                ax1 = rfig.axes[0]
+                ax1.remove()
+                ax1.figure = fig
+                fig.add_axes(ax1)
+                ax1.set_subplotspec(gs[0, 0])
 
-            ax2 = ffig.axes[0]
-            ax2.remove()
-            ax2.figure = fig
-            fig.add_axes(ax2)
-            ax2.set_subplotspec(gs[0, 1])
+            if ffig != None:
+                ax2 = ffig.axes[0]
+                ax2.remove()
+                ax2.figure = fig
+                fig.add_axes(ax2)
+                ax2.set_subplotspec(gs[0, 1])
 
-            ax3 = cfig.axes[0]
-            ax3.remove()
-            ax3.figure = fig
-            fig.add_axes(ax3)
-            ax3.set_subplotspec(gs[0, 1])
+            if cfig != None:
+                ax3 = cfig.axes[0]
+                ax3.remove()
+                ax3.figure = fig
+                fig.add_axes(ax3)
+                ax3.set_subplotspec(gs[0, 2])
 
             plt.savefig(figpath)
-
-        plt.close(rfig)
-        plt.close(ffig)
-        plt.close(cfig)
+        if rfig != None:
+            plt.close(rfig)
+        if ffig != None:
+            plt.close(ffig)
+        if cfig != None:
+            plt.close(cfig)
             
         return [channel, r, f, c]
     
@@ -78,13 +86,13 @@ def execute_htp(filepath, channel_select=-1, resilience=True, flow=True, coarse=
 
     return rfc
 
-def process_directory(root_dir, channel):
+def process_directory(root_dir, channel, r = True, f = True, c = True):
     if os.path.isfile(root_dir):
         all_data = []
         file_path = root_dir
         filename = os.path.basename(file_path)
         dir_name = os.path.dirname(file_path)
-        rfc_data = execute_htp(file_path)
+        rfc_data = execute_htp(file_path, channel)
         if rfc_data == None:
             raise TypeError("Please input valid file type ('.nd2', '.tiff', '.tif')")
         all_data.append([filename])
@@ -144,6 +152,11 @@ def process_directory(root_dir, channel):
 def main():
     dir_name = sys.argv[1]
     channel = -1 if len(sys.argv) == 2 else sys.argv[2]
+    if len(sys.argv) == 6:
+        r = bool(sys.argv[3])
+        f = bool(sys.argv[4])
+        c = bool(sys.argv[5])
+        process_directory(dir_name, channel, r, f, c)
     process_directory(dir_name, channel)
 
 if __name__ == "__main__":
