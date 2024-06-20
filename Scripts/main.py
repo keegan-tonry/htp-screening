@@ -81,7 +81,8 @@ def execute_htp(filepath, channel_select=-1, resilience=True, flow=True, coarse=
             print('Channel:', channel)
             rfc.append(check(channel, resilience, flow, coarse))
     
-    else: 
+    else:
+        print('Channel: ', channel_select)
         rfc.append(check(channel_select, resilience, flow, coarse))
 
     return rfc
@@ -151,7 +152,7 @@ def process_directory(root_dir, channel, r = True, f = True, c = True):
 
 def main():
     dir_name = sys.argv[1]
-    channel = -1 if len(sys.argv) == 2 else sys.argv[2]
+    channel = -1 if len(sys.argv) == 2 else int(sys.argv[2])
     if len(sys.argv) == 6:
         r = bool(sys.argv[3])
         f = bool(sys.argv[4])
