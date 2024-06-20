@@ -117,23 +117,23 @@ def process_directory(root_dir, channel, r = True, f = True, c = True):
                     else:
                         # Write an empty row
                         csvwriter.writerow([])
-    
-    for dirpath, dirnames, filenames in os.walk(root_dir):
-
-        dirnames[:] = [d for d in dirnames if d != "Resilience analysis" and d != "contraction_analysis"]
+    else: 
         all_data = []
-
-        for filename in filenames:
-            if filename.startswith('._'):
-                continue
-            file_path = os.path.join(dirpath, filename)
-            print(file_path)
-            rfc_data = execute_htp(file_path, channel, r, f, c)
-            if rfc_data == None:
-                continue
-            all_data.append([file_path])
-            all_data.extend(rfc_data)
-            all_data.append([])
+        for dirpath, dirnames, filenames in os.walk(root_dir):
+    
+            dirnames[:] = [d for d in dirnames if d != "Resilience analysis" and d != "contraction_analysis"]
+    
+            for filename in filenames:
+                if filename.startswith('._'):
+                    continue
+                file_path = os.path.join(dirpath, filename)
+                print(file_path)
+                rfc_data = execute_htp(file_path, channel, r, f, c)
+                if rfc_data == None:
+                    continue
+                all_data.append([file_path])
+                all_data.extend(rfc_data)
+                all_data.append([])
 
         if all_data:
             headers = ['Channel', 'Resilience', 'Flow', 'Coarseness']
@@ -158,7 +158,8 @@ def main():
         f = bool(int(sys.argv[4]))
         c = bool(int(sys.argv[5]))
         process_directory(dir_name, channel, r, f, c)
-    process_directory(dir_name, channel)
+    else:
+        process_directory(dir_name, channel)
 
 if __name__ == "__main__":
     main()
