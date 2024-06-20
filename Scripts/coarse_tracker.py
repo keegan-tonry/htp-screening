@@ -20,6 +20,7 @@ def find_nearest_idx(array, value):
 ### function to find the area under the curve bounded by x-value *indices* i_idx and f_idx
 def area_under_curve(x_vals, y_vals, i_idx, f_idx):
     total = 0
+    if (len(x_vals[i_idx:f_idx]) == 0): return 0
     dx = (x_vals[f_idx] - x_vals[i_idx]) / (len(x_vals[i_idx:f_idx]))
     y_vals_in_range = y_vals[i_idx:f_idx]
     for i in range(len(x_vals[i_idx:f_idx])):
@@ -47,13 +48,9 @@ def zero_intersect_in_range(x_arr, y_arr, x1, x2, near_zero_limit, verbose):
     close_xvals = []
     corresponding_yvals = []
     found = False
-    if verbose == True:
-        print("searching for zero intersect in x-val range [%i, %i]"%(x_arr[i_idx], x_arr[f_idx]))
     for i in range(len(y_arr[i_idx:f_idx])):
         if (np.abs(0-y_arr[i+i_idx]))<near_zero_limit:
             found = True
-            if verbose == True:
-                print("diff near zero at: %4.2f, diff = %1.1e" %(x_arr[i+i_idx], 0-y_arr[i+i_idx]))
             close_xvals.append(x_arr[i+i_idx])
             corresponding_yvals.append(y_arr[i+i_idx])
     if len(close_xvals)!=0:
@@ -61,8 +58,6 @@ def zero_intersect_in_range(x_arr, y_arr, x1, x2, near_zero_limit, verbose):
         idx = find_nearest_idx(x_arr, nearest)
         return nearest, idx
     elif found == False:
-        if verbose == True:
-            print("none found")
         return 0, 0
 
 
@@ -122,17 +117,9 @@ def check_coarse(file, channel, first_frame = 0, last_frame = None, verbose=Fals
     for i in range(len(x_ranges_list)-1):
         x1, x1_idx = zero_intersect_in_range(x_poly, y_poly, x_ranges_list[i][0], x_ranges_list[i][1],
                                              near_zero_limit, verbose)
-        if verbose == True:
-            print(" --> first_zero_x = %4.2f, at index [%i] \n" % (x1, x1_idx))
-
         x2, x2_idx = zero_intersect_in_range(x_poly, y_poly, x_ranges_list[i+1][0], x_ranges_list[i+1][1],
                                              near_zero_limit, verbose)
-        if verbose == True:
-            print(" --> second_zero_x = %4.2f, at index [%i] \n" %(x2, x2_idx))
-
         area = area_under_curve(x_poly, y_poly, x1_idx, x2_idx)
-        if verbose == True:
-            print("* area check for x range [%4.2f, %4.2f] = %1.3e * \n" %(x1_idx, x2_idx, area))
         if np.abs(area) > minimum_area:
 
             ax.axvline(x2, color = c_list[j], linestyle = '--', alpha = 0.7)
@@ -166,7 +153,6 @@ def check_coarse(file, channel, first_frame = 0, last_frame = None, verbose=Fals
     ax.set_ylabel("Probability")
     ax.set_xlim(0,max_px_intensity + 5)
     ax.legend()
-    #return title, (np.array(results)).round(4)
     return verdict, fig
 
 def main():

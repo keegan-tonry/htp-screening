@@ -11,11 +11,7 @@ def findRoot(xValues, yValues,threshold):
     interpolator = Akima1DInterpolator(xValues, yValues)
     return optimize.root_scalar(lambda arg: interpolator([arg])[0]-threshold ,bracket=[min(xValues),max(xValues)]).root
 
-def check_flow(file, channel, decay_threshold = 1/np.exp(1), min_corr_len = 25, min_fraction = 0.5, frame_stride = 1, downsample = 8, return_graph=False):
-    #Conversion from a pixel to length in microns
-    pix_size = 2.4859
-    #Width of annuli for binning of displacement vectors
-    bin_width = 2.4859
+def check_flow(file, channel, decay_threshold = 1/np.exp(1), min_corr_len = 25, min_fraction = 0.5, frame_stride = 1, downsample = 8, pix_size=2.4859, bin_width=2.4859, verbose=False):
     #Width of annuli in pixels
     pixel_bin_width = np.ceil(bin_width / pix_size)
     #Length at which to stop computing correlators
@@ -79,9 +75,9 @@ def check_flow(file, channel, decay_threshold = 1/np.exp(1), min_corr_len = 25, 
         pos += 1
     
     if(len(corrLens[corrLens>min_corr_len])/len(corrLens) > min_fraction):
-        verdict = "Contraction possibly detected"
+        verdict = "LR correlation possibly detected"
     else:
-        verdict = "Contraction not detected"
+        verdict = "LR correlation not detected"
     ax.plot(range(0,len(corrLens)),corrLens)
     
     return verdict, fig

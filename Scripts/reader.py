@@ -25,7 +25,6 @@ def read_file(file_path):
         if len(file.shape) == 3:
             file = np.reshape(file, (file.shape + (1,)))
         channels = file.shape[3]
-        filetype = 'tif'
 
     elif file_path.endswith('.nd2'):
         file_nd2 = ND2Reader(file_path)
