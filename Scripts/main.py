@@ -93,7 +93,7 @@ def process_directory(root_dir, channel, r = True, f = True, c = True):
         file_path = root_dir
         filename = os.path.basename(file_path)
         dir_name = os.path.dirname(file_path)
-        rfc_data = execute_htp(file_path, channel)
+        rfc_data = execute_htp(file_path, channel, r, f, c)
         if rfc_data == None:
             raise TypeError("Please input valid file type ('.nd2', '.tiff', '.tif')")
         all_data.append([filename])
@@ -128,7 +128,7 @@ def process_directory(root_dir, channel, r = True, f = True, c = True):
                 continue
             file_path = os.path.join(dirpath, filename)
             print(file_path)
-            rfc_data = execute_htp(file_path, channel)
+            rfc_data = execute_htp(file_path, channel, r, f, c)
             if rfc_data == None:
                 continue
             all_data.append([file_path])
