@@ -36,7 +36,7 @@ def track_void(image, threshold, step):
 def check_resilience(file, channel, R_offset=0.1, percent_threshold_loss = 0.8, percent_threshold_gain = 1.2, frame_step=1, frame_start_percent=0.8, frame_stop_percent=1, verbose=False):
     image = file[:,:,:,channel]
 
-    fig, ax = plt.subplots(figsize = (20,20))
+    fig, ax = plt.subplots(figsize = (5,5))
 
     # Error Checking: Empty Image
     if (image == 0).any():
@@ -49,7 +49,7 @@ def check_resilience(file, channel, R_offset=0.1, percent_threshold_loss = 0.8, 
 
     percent_gain_list = np.array(largest_void_lst)/largest_void_lst[0]
     
-    ax.plot(np.arange(start_index, stop_index, frame_step), percent_gain_list[start_index:stop_index])
+    ax.plot(np.arange(start_index, stop_index, frame_step), percent_gain_list[start_index:stop_index:frame_step])
     ax.set_xlabel("Frames")
     ax.set_ylabel("Proportion of orginal void size")
     #Calculate
