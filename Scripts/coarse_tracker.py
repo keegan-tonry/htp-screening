@@ -74,7 +74,7 @@ def check_coarse(file, channel, first_frame = 0, last_frame = None, verbose=Fals
     if last_frame == None: 
         last_frame = len(im) - 1
 
-    fig, ax = plt.subplots(figsize=(20,20))
+    fig, ax = plt.subplots(figsize=(5,5))
 
     if (im == 0).all(): # If image is blank, then end program early
         verdict = "Data not available for this channel."
