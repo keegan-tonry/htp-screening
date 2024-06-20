@@ -154,9 +154,9 @@ def main():
     dir_name = sys.argv[1]
     channel = -1 if len(sys.argv) == 2 else int(sys.argv[2])
     if len(sys.argv) == 6:
-        r = bool(sys.argv[3])
-        f = bool(sys.argv[4])
-        c = bool(sys.argv[5])
+        r = bool(int(sys.argv[3]))
+        f = bool(int(sys.argv[4]))
+        c = bool(int(sys.argv[5]))
         process_directory(dir_name, channel, r, f, c)
     process_directory(dir_name, channel)
 
