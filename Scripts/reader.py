@@ -27,7 +27,10 @@ def read_file(file_path):
         channels = file.shape[3]
 
     elif file_path.endswith('.nd2'):
-        file_nd2 = ND2Reader(file_path)
+        try:
+            file_nd2 = ND2Reader(file_path)
+        except EmptyFileError:
+            file_nd2 = None
         file = convert_to_array(file_nd2)
         channels = len(file_nd2.metadata['channels'])
 

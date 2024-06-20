@@ -87,6 +87,10 @@ def execute_htp(filepath, channel_select=-1, resilience=True, flow=True, coarse=
 
     return rfc
 
+def remove_extension(filepath):
+    if filepath.endswith('.tiff'):
+        return removesuffix()
+
 def process_directory(root_dir, channel, r = True, f = True, c = True):
     if os.path.isfile(root_dir):
         all_data = []

@@ -90,6 +90,8 @@ def check_coarse(file, channel, first_frame = 0, last_frame = None, verbose=Fals
 
     i_frame_data = im[first_frame]
     f_frame_data = im[last_frame]
+    f_norm = np.mean(i_frame_data) / np.mean(f_frame_data)
+    f_frame_data = f_norm * f_frame_data
 
     set_bins = np.arange(0, max_px_intensity, bins_width)
     bins_num = len(set_bins)
