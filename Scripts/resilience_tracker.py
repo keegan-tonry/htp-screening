@@ -53,7 +53,7 @@ def check_resilience(file, channel, R_offset=0.1, percent_threshold_loss = 0.8, 
     ax.set_xlabel("Frames")
     ax.set_ylabel("Proportion of orginal void size")
     #Calculate
-    avg_percent_change = np.mean(largest_void_lst[start_index:stop_index])
+    avg_percent_change = np.mean(largest_void_lst[start_index:stop_index])/largest_void_lst[0]
     #Give judgement
     if avg_percent_change >= percent_threshold_loss and avg_percent_change <= percent_threshold_gain:
         verdict = "Persistance possibly detected."
