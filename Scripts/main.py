@@ -115,7 +115,7 @@ def process_directory(root_dir, channel):
         all_data = []
 
         for filename in filenames:
-            if filename.starts_with('._'):
+            if filename.startswith('._'):
                 continue
             file_path = os.path.join(dirpath, filename)
             print(file_path)
