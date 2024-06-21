@@ -67,9 +67,9 @@ def check_flow(file, name, channel, decay_threshold = 1/np.exp(1), min_corr_len 
         downV = -1*flow[:,:,1][yindices][:,yindices]
         if(np.isin(pos, positions)):
 	        fig2, ax2 = plt.subplots(figsize=(10,10))
-        	q = ax2.quiver(xindices, yindices, downU, downV,color='blue')
-        	fig2.savefig(name + '_' + str(pos) + '.png')
-        	plt.close(fig2)
+                q = ax2.quiver(xindices, yindices, downU, downV,color='blue')
+                fig2.savefig(name + '_' + str(pos) + '.png')
+                plt.close(fig2)
         xFFT = fft2(dirX)
         xConv = np.real(ifft2(np.multiply(xFFT,np.conjugate(xFFT))))
         yFFT = fft2(dirY)
