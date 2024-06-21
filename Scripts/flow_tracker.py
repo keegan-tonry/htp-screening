@@ -15,7 +15,7 @@ def check_flow(file, name, channel, decay_threshold = 1/np.exp(1), min_corr_len 
     #Width of annuli in pixels
     pixel_bin_width = np.ceil(bin_width / pix_size)
     #Length at which to stop computing correlators
-    max_len = 100
+    max_len = 500
     #Length in pixels at which to cut off correlators
     max_pixel_len = np.rint(max_len / pix_size)
     #Cutoff magnitude to consider a vector to be null; also helps to avoid divide-by-zero errors
@@ -38,6 +38,7 @@ def check_flow(file, name, channel, decay_threshold = 1/np.exp(1), min_corr_len 
         return normals
 
     images = file[:,:,:,channel]
+    positions = np.array([0, int(np.floor(len(images)/2)), len(images) - 1])
     
     # Error Checking: Empty Images
     if (images == 0).any():
@@ -50,11 +51,12 @@ def check_flow(file, name, channel, decay_threshold = 1/np.exp(1), min_corr_len 
     radii = np.zeros((len(xindices),len(yindices)))
     for i in range(0,len(xindices)):
         for j in range(0,len(yindices)):
-            radii[i][j] = np.sqrt(i**2 + j**2)
+            radii[i][j] = np.sqrt(xindices[i]**2 + yindices[j]**2)
 
     #For each consecutive pair
-    corrLens = np.zeros(int(np.floor((len(images)-1)/frame_stride)))
+    corrLens = np.zeros(len(images)-frame_stride)
     pos = 0
+    
     for iter in range(0,len(images)-frame_stride,1):
         flow = cv.calcOpticalFlowFarneback(images[iter], images[iter+frame_stride], None, 0.5, 3, 20, 3, 5, 1.2, 0)
         directions = normalVectors(flow[xindices][:,yindices])
@@ -62,20 +64,25 @@ def check_flow(file, name, channel, decay_threshold = 1/np.exp(1), min_corr_len 
         dirY = directions[:,:,1]
         downU = flow[:,:,0][xindices][:,xindices]
         downV = -1*flow[:,:,1][yindices][:,yindices]
-        fig2, ax2 = plt.subplots(figsize=(10,10))
-        q = ax2.quiver(xindices, yindices, downU, downV,color='blue')
-        fig2.savefig(name + '_' + str(pos) + '.png')
-        plt.close(fig2)
+        if(np.isin(pos, positions)):
+	        fig2, ax2 = plt.subplots(figsize=(10,10))
+        	q = ax2.quiver(xindices, yindices, downU, downV,color='blue')
+        	fig2.savefig(name + '_' + str(pos) + '.png')
+        	plt.close(fig2)
         xFFT = fft2(dirX)
         xConv = np.real(ifft2(np.multiply(xFFT,np.conjugate(xFFT))))
         yFFT = fft2(dirY)
         yConv = np.real(ifft2(np.multiply(yFFT,np.conjugate(yFFT))))
         convSum = np.add(xConv,yConv)
-        means = np.zeros(len(range(0,int(max_pixel_len),int(pixel_bin_width))))
+        means = np.array([])
+        inRadii = np.array([])
         for i in range(0,int(max_pixel_len),int(pixel_bin_width)):
-            means[i] = convSum[(radii > i -.5*pixel_bin_width)&(radii < i + .5*pixel_bin_width)].mean()/convSum[0,0]
+                inBin = convSum[(radii > i -.5*pixel_bin_width)&(radii < i + .5*pixel_bin_width)]
+                if(len(inBin) > 0):
+                        inRadii = np.append(inRadii, i)
+                        means = np.append(means, inBin.mean()/convSum[0,0])
         try:
-            corrLens[pos] = pix_size*findRoot(range(0,len(means)),means,decay_threshold)
+            corrLens[pos] = pix_size*findRoot(inRadii,means,decay_threshold)
         except ValueError:
             corrLens[pos] = 0
         pos += 1
