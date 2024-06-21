@@ -38,7 +38,7 @@ def track_void(image, threshold, step):
         void_lst.append(void_area)
     return void_lst
 
-def check_resilience(file, channel, R_offset=0.1, percent_threshold_loss = 0.9, percent_threshold_gain = 1.1, frame_step=1, frame_start_percent=0.9, frame_stop_percent=1, verbose=False):
+def check_resilience(file, channel, R_offset=0, percent_threshold_loss = 0.9, percent_threshold_gain = 1.1, frame_step=1, frame_start_percent=0.9, frame_stop_percent=1, verbose=False):
     #Note for parameters: frame_step (stepsize) used to reduce the runtime. 
     image = file[:,:,:,channel]
     frame_initial_percent = 0.05
@@ -55,14 +55,14 @@ def check_resilience(file, channel, R_offset=0.1, percent_threshold_loss = 0.9, 
     stop_index = int(len(largest_void_lst) * frame_stop_percent)
     start_initial_index = int(len(largest_void_lst)*frame_initial_percent)
 
-    
-    percent_gain_list = np.array(largest_void_lst)/largest_void_lst[0]
+    percent_gain_initial_list = np.mean(largest_void_lst[0:start_initial_index])
+    percent_gain_list = np.array(largest_void_lst)/percent_gain_initial_list
     
     ax.plot(np.arange(start_index, stop_index), percent_gain_list[start_index:stop_index])
     ax.set_xlabel("Frames")
     ax.set_ylabel("Proportion of orginal void size")
     #Calculate
-    percent_gain_initial_list = np.mean(largest_void_lst[0:start_initial_index])
+    
     avg_percent_change = np.mean(largest_void_lst[start_index:stop_index])/percent_gain_initial_list
     max_void_size = max(largest_void_lst)/(len(image[0,0,:])*len(image[0,:,0]))
     #print(avg_percent_change)
@@ -71,15 +71,20 @@ def check_resilience(file, channel, R_offset=0.1, percent_threshold_loss = 0.9, 
     #Give judgement
     if avg_percent_change >= percent_threshold_loss and avg_percent_change <= percent_threshold_gain or max_void_size < 0.10:
         verdict = "Persistance possibly detected."
+        r_value = 1
     else:
         verdict = "Persistance not detected"
-
-    return verdict, fig
+        r_value = 0
+    
+    max_void_value = int(max_void_size*10)
+    
+    return verdict, fig, r_value, max_void_value
 
 def main():
     file = read_file(sys.argv[1])
     channel = read_file(sys.argv[2])
-    verdict, fig = check_resilience(file, channel)
+    verdict, fig, r_value, void_value = check_resilience(file, channel)
 
 if __name__ == "__main__":
     main()
+    
