@@ -5,6 +5,7 @@ import imageio.v3 as iio
 from nd2reader import ND2Reader
 from scipy.interpolate import splrep, sproot, BSpline
 import scipy
+from scipy.stats import mode
 import scipy.signal as signal
 
 def calculate_mean_mode(frame):

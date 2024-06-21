@@ -28,7 +28,7 @@ def execute_htp(filepath, channel_select=-1, resilience=True, flow=True, coarse=
         else:
             c = "Coarseness not tested."
             cfig = None
-             c_areas = None
+            c_areas = None
 
         figpath = remove_extension(filepath) + '_channel' + str(channel) + '_graphs.png'
         if verbose == True:
