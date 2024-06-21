@@ -28,6 +28,7 @@ def execute_htp(filepath, channel_select=-1, resilience=True, flow=True, coarse=
         else:
             c = "Coarseness not tested."
             cfig = None
+             c_areas = None
 
         figpath = remove_extension(filepath) + '_channel' + str(channel) + '_graphs.png'
         if verbose == True:
@@ -64,7 +65,7 @@ def execute_htp(filepath, channel_select=-1, resilience=True, flow=True, coarse=
         if cfig != None:
             plt.close(cfig)
             
-        return [channel, r, f, c, r_value, void_valuec_areas]
+        return [channel, r, f, c, r_value, void_value, c_areas]
     
     file = read_file(filepath)
 
