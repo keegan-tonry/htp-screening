@@ -58,7 +58,7 @@ def check_resilience(file, channel, R_offset=0.1, percent_threshold_loss = 0.9, 
     
     percent_gain_list = np.array(largest_void_lst)/largest_void_lst[0]
     
-    ax.plot(np.arange(start_index, stop_index, frame_step), percent_gain_list[start_index:stop_index:frame_step])
+    ax.plot(np.arange(start_index, stop_index), percent_gain_list[start_index:stop_index])
     ax.set_xlabel("Frames")
     ax.set_ylabel("Proportion of orginal void size")
     #Calculate
