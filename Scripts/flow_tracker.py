@@ -38,7 +38,8 @@ def check_flow(file, name, channel, decay_threshold = 1/np.exp(1), min_corr_len 
         return normals
 
     images = file[:,:,:,channel]
-    positions = np.array([0, int(np.floor(len(images)/2)), len(images) - 1])
+    positions = np.array([0, int(np.floor(len(images)/2)), len(images) - frame_stride - 1])
+    print(positions, "\n")
     
     # Error Checking: Empty Images
     if (images == 0).any():
