@@ -147,7 +147,7 @@ def process_directory(root_dir, channel, r = True, f = True, c = True):
                 all_data.append([])
 
         if all_data:
-            headers = ['Channel', 'Resilience', 'Flow', 'Coarseness']
+            headers = ['Channel', 'Resilience', 'Flow', 'Coarseness', 'Screening on persistence', 'Largest void']
             output_file_path = os.path.join(root_dir, "summary.csv")
             with open(output_file_path, 'w', newline='') as csvfile:
                 csvwriter = csv.writer(csvfile)
