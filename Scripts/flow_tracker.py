@@ -11,7 +11,7 @@ def findRoot(xValues, yValues,threshold):
     interpolator = Akima1DInterpolator(xValues, yValues)
     return optimize.root_scalar(lambda arg: interpolator([arg])[0]-threshold ,bracket=[min(xValues),max(xValues)]).root
 
-def check_flow(file, name, channel, decay_threshold = 1/np.exp(1), min_corr_len = 25, min_fraction = 0.5, frame_stride = 1, downsample = 8, pix_size=1, bin_width=1, verbose=False):
+def check_flow(file, name, channel, decay_threshold = 1/np.exp(1), min_corr_len = 25, min_fraction = 0.5, frame_stride = 5, downsample = 8, pix_size=1, bin_width=1, verbose=False):
     #Width of annuli in pixels
     pixel_bin_width = np.ceil(bin_width / pix_size)
     #Length at which to stop computing correlators
@@ -66,7 +66,7 @@ def check_flow(file, name, channel, decay_threshold = 1/np.exp(1), min_corr_len 
         downU = flow[:,:,0][xindices][:,xindices]
         downV = -1*flow[:,:,1][yindices][:,yindices]
         if(np.isin(pos, positions)):
-	        fig2, ax2 = plt.subplots(figsize=(10,10))
+                fig2, ax2 = plt.subplots(figsize=(10,10))
                 q = ax2.quiver(xindices, yindices, downU, downV,color='blue')
                 fig2.savefig(name + '_' + str(pos) + '.png')
                 plt.close(fig2)
