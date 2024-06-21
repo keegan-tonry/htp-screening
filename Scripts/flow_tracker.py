@@ -59,17 +59,21 @@ def check_flow(file, name, channel, decay_threshold = 1/np.exp(1), min_corr_len 
     #For each consecutive pair
     corrLens = np.zeros(len(images)-frame_stride)
     pos = 0
+    xMeans = np.array([])
+    yMeans = np.array([])
     
     for iter in range(0,len(images)-frame_stride,1):
         flow = cv.calcOpticalFlowFarneback(images[iter], images[iter+frame_stride], None, 0.5, 3, 20, 3, 5, 1.2, 0)
         directions = normalVectors(flow[xindices][:,yindices])
         dirX = directions[:,:,0]
         dirY = directions[:,:,1]
-        downU = flow[:,:,0][xindices][:,xindices]
-        downU = np.flipud(downU)
-        downV = -1*flow[:,:,1][yindices][:,yindices]
-        downV = np.flipud(downV)
+        xMeans = np.append(xMeans, dirX.mean())
+        yMeans = np.append(yMeans, dirY.mean())
         if(np.isin(pos, positions)):
+                downU = flow[:,:,0][xindices][:,yindices]
+                downU = np.flipud(downU)
+                downV = -1*flow[:,:,1][xindices][:,yindices]
+                downV = np.flipud(downV)
                 fig2, ax2 = plt.subplots(figsize=(10,10))
                 q = ax2.quiver(xindices, yindices, downU, downV,color='blue')
                 fig2.savefig(name + '_' + str(pos) + '.png')
@@ -97,5 +101,8 @@ def check_flow(file, name, channel, decay_threshold = 1/np.exp(1), min_corr_len 
     else:
         verdict = "LR correlation not detected"
     ax.plot(range(0,len(corrLens)),corrLens)
+
+    print("x mean: ", xMeans.mean(), "\n")
+    print("y mean: ", yMeans.mean(), "\n")
     
     return verdict, fig
