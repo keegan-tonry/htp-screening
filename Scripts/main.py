@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from matplotlib import gridspec
 
 
-def execute_htp(filepath, channel_select=-1, resilience=True, flow=True, coarse=True, verbose=True, accept_dim = False):
+def execute_htp(filepath, channel_select=-1, resilience=True, flow=True, coarse=True, verbose=True, accept_dim=False):
     def check(channel, resilience, flow, coarse):
         if resilience == True:
             r, rfig, r_value, void_value = check_resilience(file, channel)
@@ -67,7 +67,7 @@ def execute_htp(filepath, channel_select=-1, resilience=True, flow=True, coarse=
             
         return [channel, r, f, c, r_value, void_value, c_areas]
     
-    file = read_file(filepath)
+    file = read_file(filepath, accept_dim)
 
     if (isinstance(file, np.ndarray) == False):
         return None
@@ -99,13 +99,13 @@ def remove_extension(filepath):
     if filepath.endswith('.nd2'):
         return filepath.removesuffix('.nd2')
 
-def process_directory(root_dir, channel, r = True, f = True, c = True):
+def process_directory(root_dir, channel, r = True, f = True, c = True, accept_dim = False):
     if os.path.isfile(root_dir):
         all_data = []
         file_path = root_dir
         filename = os.path.basename(file_path)
         dir_name = os.path.dirname(file_path)
-        rfc_data = execute_htp(file_path, channel, r, f, c)
+        rfc_data = execute_htp(file_path, channel, r, f, c, accept_dim)
         if rfc_data == None:
             raise TypeError("Please input valid file type ('.nd2', '.tiff', '.tif')")
         all_data.append([filename])
@@ -140,7 +140,7 @@ def process_directory(root_dir, channel, r = True, f = True, c = True):
                     continue
                 file_path = os.path.join(dirpath, filename)
                 print(file_path)
-                rfc_data = execute_htp(file_path, channel, r, f, c)
+                rfc_data = execute_htp(file_path, channel, r, f, c, accept_dim)
                 if rfc_data == None:
                     continue
                 all_data.append([file_path])
@@ -165,13 +165,15 @@ def process_directory(root_dir, channel, r = True, f = True, c = True):
 def main():
     dir_name = sys.argv[1]
     channel = -1 if len(sys.argv) == 2 else int(sys.argv[2])
-    if len(sys.argv) == 6:
+    if len(sys.argv) >= 6:
         r = bool(int(sys.argv[3]))
         f = bool(int(sys.argv[4]))
         c = bool(int(sys.argv[5]))
-        process_directory(dir_name, channel, r, f, c)
+        accept_dim = False if len(sys.argv) == 6 else bool(int(sys.argv[6]))
+        process_directory(dir_name, channel, r, f, c, accept_dim)
     else:
-        process_directory(dir_name, channel)
+        accept_dim = False if len(sys.argv) == 3 else bool(int(sys.argv[3]))
+        process_directory(dir_name, channel, accept_dim = accept_dim)
 
 if __name__ == "__main__":
     main()

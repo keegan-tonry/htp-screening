@@ -110,6 +110,10 @@ def check_coarse(file, channel, first_frame = 0, last_frame = None, threshold_pe
     
     peaks_max = signal.argrelextrema(filtered_ccd, np.greater, order = 20)
     peaks_min = signal.argrelextrema(filtered_ccd, np.less, order = 20)
+    if len(filtered_ccd[peaks_max]) == 0:
+        filtered_ccd[peaks_max] = np.array([0])
+    if len(filtered_ccd[peaks_min]) == 0:
+        filtered_ccd[peaks_min] = np.array([0])
     areas = np.append(np.abs(filtered_ccd[peaks_max][0]), np.abs(filtered_ccd[peaks_max][0] - filtered_ccd[peaks_min][0]))
 
     verdict = analyze_frames(im, threshold_percentage)

@@ -16,7 +16,6 @@ def read_file(file_path, accept_dim = False):
         else:
             return False
 
-    
     def bleach_correction(im):
         min_px_intensity = np.min(im)
         num_frames=len(im) #num frames in video
@@ -39,6 +38,10 @@ def read_file(file_path, accept_dim = False):
         height = file.metadata['height']
         width = file.metadata['width']
         images = np.zeros((num_images, height, width, num_channels))
+
+        if num_images <= 1:
+            return None
+        
         for i in range(num_channels):
             for j in range(num_images):
                 frame = np.array(file.get_frame_2D(c=i, t=j))
@@ -54,9 +57,13 @@ def read_file(file_path, accept_dim = False):
     elif file_path.endswith('.nd2'):
         try:
             file_nd2 = ND2Reader(file_path)
+            if file_nd2 == None:
+                return None
         except:
             return None
         file = convert_to_array(file_nd2)
+        if isinstance(file, np.ndarray) == False:
+            return None
         channels = len(file_nd2.metadata['channels'])
 
     file = bleach_correction(file)
