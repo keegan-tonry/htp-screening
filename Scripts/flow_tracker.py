@@ -37,7 +37,10 @@ def check_flow(file, name, channel, decay_threshold = 1/np.exp(1), min_corr_len 
     
         return normals
 
-    images = file[:,:,:,channel]
+    if(len(file.shape) == 4):
+            images = file[:,:,:,channel]
+    else:
+            images = file[:,:,:]
     positions = np.array([0, int(np.floor(len(images)/2)), len(images) - frame_stride - 1])
     print(positions, "\n")
     
