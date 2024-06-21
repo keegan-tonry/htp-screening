@@ -37,6 +37,7 @@ def execute_htp(filepath, channel_select=-1, resilience=True, flow=True, coarse=
                 ax1.remove()
                 ax1.figure = fig
                 fig.add_axes(ax1)
+                ax1.set_position(gs[0:1].get_position(fig))
                 ax1.set_subplotspec(gs[0, 0])
 
             if ffig != None:
@@ -44,6 +45,7 @@ def execute_htp(filepath, channel_select=-1, resilience=True, flow=True, coarse=
                 ax2.remove()
                 ax2.figure = fig
                 fig.add_axes(ax2)
+                ax2.set_position(gs[1:2].get_position(fig))
                 ax2.set_subplotspec(gs[0, 1])
 
             if cfig != None:
@@ -51,15 +53,17 @@ def execute_htp(filepath, channel_select=-1, resilience=True, flow=True, coarse=
                 ax3.remove()
                 ax3.figure = fig
                 fig.add_axes(ax3)
+                ax3.set_position(gs[2:3].get_position(fig))
                 ax3.set_subplotspec(gs[0, 2])
 
+            fig.tight_layout()
+
+
             plt.savefig(figpath)
-        if rfig != None:
-            plt.close(rfig)
-        if ffig != None:
-            plt.close(ffig)
-        if cfig != None:
-            plt.close(cfig)
+
+        plt.close(rfig)
+        plt.close(ffig)
+        plt.close(cfig)
             
         return [channel, r, f, c]
     
