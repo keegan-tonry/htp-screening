@@ -42,12 +42,11 @@ def check_flow(file, name, channel, decay_threshold = 1/np.exp(1), min_corr_len 
     else:
             images = file[:,:,:]
     positions = np.array([0, int(np.floor(len(images)/2)), len(images) - frame_stride - 1])
-    print(positions, "\n")
-    
+
     # Error Checking: Empty Images
-    if (images == 0).any():
-        verdict = "Data not available for this channel."
-        return verdict, fig
+    #if (images == 0).any():
+    #    verdict = "Data not available for this channel."
+    #    return verdict, fig
 
     xindices = np.arange(0, images[0].shape[0], downsample)
     yindices = np.arange(0, images[0].shape[1], downsample)
@@ -67,7 +66,9 @@ def check_flow(file, name, channel, decay_threshold = 1/np.exp(1), min_corr_len 
         dirX = directions[:,:,0]
         dirY = directions[:,:,1]
         downU = flow[:,:,0][xindices][:,xindices]
+        downU = np.flipud(downU)
         downV = -1*flow[:,:,1][yindices][:,yindices]
+        downV = np.flipud(downV)
         if(np.isin(pos, positions)):
                 fig2, ax2 = plt.subplots(figsize=(10,10))
                 q = ax2.quiver(xindices, yindices, downU, downV,color='blue')
