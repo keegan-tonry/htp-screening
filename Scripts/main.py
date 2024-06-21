@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from matplotlib import gridspec
 
 
-def execute_htp(filepath, channel_select=-1, resilience=True, flow=True, coarse=True, verbose=True):
+def execute_htp(filepath, channel_select=-1, resilience=True, flow=True, coarse=True, verbose=True, accept_dim = False):
     def check(channel, resilience, flow, coarse):
         if resilience == True:
             r, rfig = check_resilience(file, channel)
@@ -22,7 +22,7 @@ def execute_htp(filepath, channel_select=-1, resilience=True, flow=True, coarse=
             f = "Flow not tested"
             ffig = None
         if coarse == True:
-            c, cfig = check_coarse(file, channel)
+            c, cfig, c_areas = check_coarse(file, channel)
         else:
             c = "Coarseness not tested."
             cfig = None
@@ -62,7 +62,7 @@ def execute_htp(filepath, channel_select=-1, resilience=True, flow=True, coarse=
         plt.close(ffig)
         plt.close(cfig)
             
-        return [channel, r, f, c]
+        return [channel, r, f, c, c_areas]
     
     file = read_file(filepath)
 
@@ -110,7 +110,7 @@ def process_directory(root_dir, channel, r = True, f = True, c = True):
         all_data.append([])
 
         if all_data:
-            headers = ['Channel', 'Resilience', 'Flow', 'Coarseness']
+            headers = ['Channel', 'Resilience', 'Flow', 'Coarseness', 'Intensity Difference Area']
             output_filepath = os.path.join(dir_name, "summary.csv")
             with open(output_filepath, 'w', newline='') as csvfile:
                 csvwriter = csv.writer(csvfile)

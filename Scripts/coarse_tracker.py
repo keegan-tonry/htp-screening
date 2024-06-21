@@ -4,30 +4,37 @@ import imageio.v3 as iio
 # from numpy.polynomial import Polynomial, polyroots
 from nd2reader import ND2Reader
 from scipy.interpolate import splrep, sproot, BSpline
+import scipy
+import scipy.signal as signal
 
 def calculate_mean_mode(frame):
     mean_intensity = np.mean(frame)
     mode_intensity = mode(frame.flatten(), keepdims=False).mode
     return mean_intensity, mode_intensity
 
-def analyze_frames(image, threshold_percentage, start_index, end_index):
-    first_frame = image[start_index]
-    last_frame = image[end_index]
-
+def analyze_frames(image, threshold_percentage):
+    first_frame = image[0]
+    last_frame = image[len(image) - 1]
+        
+    # calculate mean and mode for first frame
     mean_first_frame, mode_first_frame = calculate_mean_mode(first_frame)
-    mean_last_frame, mode_last_frame = calculate_mean_mode(last_frame) 
-
+    # calculate mean and mode for last frame
+    mean_last_frame, mode_last_frame = calculate_mean_mode(last_frame)            
+                   
+     # Calculate the difference between mean and mode for both frames
     diff_first_frame = abs(mean_first_frame - mode_first_frame)
     diff_last_frame = abs(mean_last_frame - mode_last_frame)
 
-    percentage_increase = ((diff_first_frame - diff_last_frame) / diff_last_frame) * 100
+    # Calculate the percentage increase
+    percentage_increase = ((diff_last_frame - diff_first_frame) / diff_first_frame) * 100
 
+    # Output "coarsening" if the difference for the last frame is x% larger than for the first frame
     if percentage_increase > threshold_percentage:
-        return "dim"
+        return "Coarsening detected."
     else:
-        return "not dim"
+        return "Coarsening not detected"
 
-def check_coarse(file, channel, first_frame = 0, last_frame = None, verbose=False):
+def check_coarse(file, channel, first_frame = 0, last_frame = None, threshold_percentage = 0.7, verbose=False):
     extrema_bounds_list = []
     extrema_bounds_idx_list = []
     areas_list = []
@@ -61,7 +68,7 @@ def check_coarse(file, channel, first_frame = 0, last_frame = None, verbose=Fals
     f_frame_data = f_norm * f_frame_data
 
     fig, ax = plt.subplots(figsize=(5,5))
-    set_bins = np.arange(0, max_px_intensity, bins_width)
+    set_bins = np.arange(0, max_px_intensity, f_norm * bins_width)
     bins_num = len(set_bins)
     i_count, bins = np.histogram(i_frame_data.flatten(), bins=set_bins, density=True)
     f_count, bins = np.histogram(f_frame_data.flatten(), bins=set_bins, density=True)
@@ -104,10 +111,7 @@ def check_coarse(file, channel, first_frame = 0, last_frame = None, verbose=Fals
     peaks_min = signal.argrelextrema(filtered_ccd, np.less, order = 20)
     areas = np.append(np.abs(filtered_ccd[peaks_max][0]), np.abs(filtered_ccd[peaks_max][0] - filtered_ccd[peaks_min][0]))
 
-    if len(areas[areas > minimum_area]) >= 2:
-        print('Coarsening detected')
-    else:
-        print('Coarsening not detected')    
+    verdict = analyze_frames(im, threshold_percentage)
 
     ax.axhline(0, color='dimgray', alpha=0.6)
     ax.set_xlabel("Pixel intensity value")
