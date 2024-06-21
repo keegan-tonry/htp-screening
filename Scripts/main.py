@@ -12,10 +12,12 @@ from matplotlib import gridspec
 def execute_htp(filepath, channel_select=-1, resilience=True, flow=True, coarse=True, verbose=True):
     def check(channel, resilience, flow, coarse):
         if resilience == True:
-            r, rfig = check_resilience(file, channel)
+            r, rfig, r_value, void_value = check_resilience(file, channel)
         else:
             r = "Resilience not tested"
             rfig = None
+            r_value = None
+            void_value = None
         if flow == True:
             f, ffig = check_flow(file, channel)
         else:
@@ -40,29 +42,29 @@ def execute_htp(filepath, channel_select=-1, resilience=True, flow=True, coarse=
                 ax1.set_position([2.5/15, 1/10, 4/5, 4/5])
 
             if ffig != None:
+
                 ax2 = ffig.axes[0]
                 ax2.remove()
                 ax2.figure = fig
                 fig.add_axes(ax2)
                 ax2.set_position([17.5/15, 1/10, 4/5, 4/5])
 
-            if cfig != None:
+            if cfig != None:               
                 ax3 = cfig.axes[0]
                 ax3.remove()
                 ax3.figure = fig
                 fig.add_axes(ax3)
                 ax3.set_position([32.5/15, 1/10, 4/5, 4/5])
 
-            fig.tight_layout()
-
-
             plt.savefig(figpath)
-
-        plt.close(rfig)
-        plt.close(ffig)
-        plt.close(cfig)
+        if rfig != None:
+            plt.close(rfig)
+        if ffig != None:
+            plt.close(ffig)
+        if cfig != None:
+            plt.close(cfig)
             
-        return [channel, r, f, c]
+        return [channel, r, f, c, r_value, void_value]
     
     file = read_file(filepath)
 
@@ -110,7 +112,7 @@ def process_directory(root_dir, channel, r = True, f = True, c = True):
         all_data.append([])
 
         if all_data:
-            headers = ['Channel', 'Resilience', 'Flow', 'Coarseness']
+            headers = ['Channel', 'Resilience', 'Flow', 'Coarseness', 'Screening on persistence', 'Largest void']
             output_filepath = os.path.join(dir_name, "summary.csv")
             with open(output_filepath, 'w', newline='') as csvfile:
                 csvwriter = csv.writer(csvfile)
