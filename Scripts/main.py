@@ -37,24 +37,21 @@ def execute_htp(filepath, channel_select=-1, resilience=True, flow=True, coarse=
                 ax1.remove()
                 ax1.figure = fig
                 fig.add_axes(ax1)
-                ax1.set_position(gs[0:1].get_position(fig))
-                ax1.set_subplotspec(gs[0, 0])
+                ax1.set_position([2.5/15, 1/10, 4/5, 4/5])
 
             if ffig != None:
                 ax2 = ffig.axes[0]
                 ax2.remove()
                 ax2.figure = fig
                 fig.add_axes(ax2)
-                ax2.set_position(gs[1:2].get_position(fig))
-                ax2.set_subplotspec(gs[0, 1])
+                ax2.set_position([17.5/15, 1/10, 4/5, 4/5])
 
             if cfig != None:
                 ax3 = cfig.axes[0]
                 ax3.remove()
                 ax3.figure = fig
                 fig.add_axes(ax3)
-                ax3.set_position(gs[2:3].get_position(fig))
-                ax3.set_subplotspec(gs[0, 2])
+                ax3.set_position([32.5/15, 1/10, 4/5, 4/5])
 
             fig.tight_layout()
 
