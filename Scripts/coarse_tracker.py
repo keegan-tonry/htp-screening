@@ -73,91 +73,49 @@ def check_coarse(file, channel, first_frame = 0, last_frame = None, verbose=Fals
     count_diff = f_count - i_count
     ax.plot(plt_bins, count_diff, 'D-', ms=2, c='red', label = "difference btwn")
     
-    prob_cutoff = np.max(np.where(i_count >= 1e-4))
-    ax.axvline(x = prob_cutoff)
+    p_cutoff = 1e-5
     initial_spline = splrep(plt_bins, i_count, s = 0.00005)
-    minimum_area = 0.01 * float(BSpline.basis_element(initial_spline[0]).integrate(0, prob_cutoff))
+    in_cutoff = np.max(np.where(BSpline(*initial_spline)(plt_bins) >= p_cutoff))
+    ax.axvline(x = in_cutoff)
+    minimum_area = 0.01 * float(BSpline.basis_element(initial_spline[0]).integrate(0, in_cutoff))
+
+    initial_spline = splrep(plt_bins, i_count, s = 0.00005)
+
+    ax.plot(plt_bins, i_count, '^-', ms=4, c='darkred', alpha=0.2, label= "frame " + str(first_frame+1)+" dist")
+    ax.plot(plt_bins, f_count, 'v-', ms=4, c='darkorange',   alpha=0.2, label= "frame " + str(last_frame+1)+" dist")
+    count_diff = f_count - i_count
+    ax.plot(plt_bins, count_diff, 'D-', ms=2, c='red', label = "difference btwn")
     
     ax.plot(plt_bins, BSpline(*initial_spline)(plt_bins), c='magenta', label='initial_fit')
     
-    i_count = i_count[i_count < prob_cutoff]
-    f_count = f_count[f_count < prob_cutoff]
     
     # ### get range for local extrema of interest ###
     
     spline = splrep(plt_bins, f_count - i_count, s = 0.00005)
     t = spline[0]
-    ax.plot(plt_bins, BSpline(*spline)(plt_bins), c='blue', label='diff_fit')
     
-    areas = []
-    roots = np.array(sproot(spline))
-    roots = roots[roots < prob_cutoff]
-    bas = BSpline.basis_element(t)
-    area_1 = 0 if len(roots) == 0 else float(bas.integrate(a=0, b=roots[0]))
-    if area_1 > minimum_area: 
-        areas.append(area_1)
-    for i in range(len(roots) - 1):
-        area = float(bas.integrate(roots[i], roots[i+1]))
-        if area > minimum_area:
-            areas.append(area)
+    cumulative_count_diff = np.zeros_like(count_diff)
+    for i in range(len(cumulative_count_diff)):
+        cumulative_count_diff[i] = np.sum(count_diff[:i])
+    filtered_ccd = scipy.ndimage.gaussian_filter1d(cumulative_count_diff, 8)
+    ax.plot(filtered_ccd, c = 'darkgreen', label = 'CDF')
+    
+    peaks_max = signal.argrelextrema(filtered_ccd, np.greater, order = 20)
+    peaks_min = signal.argrelextrema(filtered_ccd, np.less, order = 20)
+    areas = np.append(np.abs(filtered_ccd[peaks_max][0]), np.abs(filtered_ccd[peaks_max][0] - filtered_ccd[peaks_min][0]))
 
-    if len(areas) >= 2:
-        verdict = "Coarsening likely detected."
-
+    if len(areas[areas > minimum_area]) >= 2:
+        print('Coarsening detected')
     else:
-        verdict = "Coarsening not detected."
+        print('Coarsening not detected')    
 
     ax.axhline(0, color='dimgray', alpha=0.6)
-    # plt.title(title)
     ax.set_xlabel("Pixel intensity value")
     ax.set_ylabel("Probability")
     ax.set_xlim(0,max_px_intensity + 5)
     ax.legend()
-    return verdict, fig
-
-    # j = 0
-    # c_list = ['cyan', 'magenta', 'lime', 'blue', 'deeppink', 'seagreen', 'red', 'green',
-    #           'yellow','orange','purple','pink','brown','gray','black','white',]
-    # for i in range(len(x_ranges_list)-1):
-    #     x1, x1_idx = zero_intersect_in_range(x_poly, y_poly, x_ranges_list[i][0], x_ranges_list[i][1],
-    #                                          near_zero_limit, verbose)
-    #     x2, x2_idx = zero_intersect_in_range(x_poly, y_poly, x_ranges_list[i+1][0], x_ranges_list[i+1][1],
-    #                                          near_zero_limit, verbose)
-    #     area = area_under_curve(x_poly, y_poly, x1_idx, x2_idx)
-    #     if np.abs(area) > minimum_area:
-
-    #         ax.axvline(x2, color = c_list[j], linestyle = '--', alpha = 0.7)
-    #         ax.axvline(x1, color = c_list[j], linestyle = ':') #, alpha = 0.6)
-    #         extrema_bounds_list.append([round(float(x1), 2), round(float(x2), 2)])
-    #         extrema_bounds_idx_list.append([x1_idx, x2_idx])
-
-    # ### find area above (or below?) extrema of interest ###
-    #         areas_list.append(area.round(6))
-    #         ax.fill_between(x_poly[x1_idx:x2_idx], y_poly[x1_idx:x2_idx],
-    #                         color= c_list[j], alpha = 0.8, label="area %i = %1.3e" %((j+1), area))
-    #         if area < 0:
-    #             extrema_h = (np.sort(y_poly[x1_idx:x2_idx]))[0]
-    #         else:
-    #             extrema_h = (np.sort(y_poly[x1_idx:x2_idx]))[-1]
-    #         ax.axhline(extrema_h, color = c_list[j], linestyle = '--', alpha = 0.7)
-    #         extrema_height_list.append(extrema_h.round(8))
-    #         extrema_len_list.append((x2 - x1).round(1))
-    #         j += 1
-
-    # results = [bins_num, extrema_bounds_list, extrema_bounds_idx_list, extrema_len_list, extrema_height_list, areas_list]
-
-    if ((len(areas_list) >= 2) and (areas_list[-1] > 0)):
-        verdict = "Coarsening likely detected."
-    else:
-        verdict = "Coarsening not detected."
-
-    ax.axhline(0, color='dimgray', alpha=0.6)
-    # plt.title(title)
-    ax.set_xlabel("Pixel intensity value")
-    ax.set_ylabel("Probability")
-    ax.set_xlim(0,max_px_intensity + 5)
-    ax.legend()
-    return verdict, fig
+    
+    return verdict, fig, areas
 
 def main():
     file = read_file(sys.argv[1])
