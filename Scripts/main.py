@@ -19,7 +19,7 @@ def execute_htp(filepath, channel_select=-1, resilience=True, flow=True, coarse=
             r_value = None
             void_value = None
         if flow == True:
-            f, ffig = check_flow(file, channel)
+            f, ffig = check_flow(file, Path(filepath).stem+'_channel'+str(channel), channel)
         else:
             f = "Flow not tested"
             ffig = None

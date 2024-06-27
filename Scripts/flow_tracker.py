@@ -11,11 +11,11 @@ def findRoot(xValues, yValues,threshold):
     interpolator = Akima1DInterpolator(xValues, yValues)
     return optimize.root_scalar(lambda arg: interpolator([arg])[0]-threshold ,bracket=[min(xValues),max(xValues)]).root
 
-def check_flow(file, channel, decay_threshold = 1/np.exp(1), min_corr_len = 25, min_fraction = 0.5, frame_stride = 1, downsample = 8, pix_size=2.4859, bin_width=2.4859, verbose=False):
+def check_flow(file, name, channel, decay_threshold = 1/np.exp(1), min_corr_len = 25, min_fraction = 0.5, frame_stride = 5, downsample = 8, pix_size=1, bin_width=1, verbose=False):
     #Width of annuli in pixels
     pixel_bin_width = np.ceil(bin_width / pix_size)
     #Length at which to stop computing correlators
-    max_len = 100
+    max_len = 500
     #Length in pixels at which to cut off correlators
     max_pixel_len = np.rint(max_len / pix_size)
     #Cutoff magnitude to consider a vector to be null; also helps to avoid divide-by-zero errors
@@ -37,12 +37,16 @@ def check_flow(file, channel, decay_threshold = 1/np.exp(1), min_corr_len = 25, 
     
         return normals
 
-    images = file[:,:,:,channel]
-    
+    if(len(file.shape) == 4):
+            images = file[:,:,:,channel]
+    else:
+            images = file[:,:,:]
+    positions = np.array([0, int(np.floor(len(images)/2)), len(images) - frame_stride - 1])
+
     # Error Checking: Empty Images
-    if (images == 0).any():
-        verdict = "Data not available for this channel."
-        return verdict, fig
+    #if (images == 0).any():
+    #    verdict = "Data not available for this channel."
+    #    return verdict, fig
 
     xindices = np.arange(0, images[0].shape[0], downsample)
     yindices = np.arange(0, images[0].shape[1], downsample)
@@ -50,26 +54,44 @@ def check_flow(file, channel, decay_threshold = 1/np.exp(1), min_corr_len = 25, 
     radii = np.zeros((len(xindices),len(yindices)))
     for i in range(0,len(xindices)):
         for j in range(0,len(yindices)):
-            radii[i][j] = np.sqrt(i**2 + j**2)
+            radii[i][j] = np.sqrt(xindices[i]**2 + yindices[j]**2)
 
     #For each consecutive pair
-    corrLens = np.zeros(int(np.floor((len(images)-1)/frame_stride)))
+    corrLens = np.zeros(len(images)-frame_stride)
     pos = 0
+    xMeans = np.array([])
+    yMeans = np.array([])
+    
     for iter in range(0,len(images)-frame_stride,1):
         flow = cv.calcOpticalFlowFarneback(images[iter], images[iter+frame_stride], None, 0.5, 3, 20, 3, 5, 1.2, 0)
         directions = normalVectors(flow[xindices][:,yindices])
         dirX = directions[:,:,0]
-        dirY = directions[:,:,1] 
+        dirY = directions[:,:,1]
+        xMeans = np.append(xMeans, dirX.mean())
+        yMeans = np.append(yMeans, dirY.mean())
+        if(np.isin(pos, positions)):
+                downU = flow[:,:,0][xindices][:,yindices]
+                downU = np.flipud(downU)
+                downV = -1*flow[:,:,1][xindices][:,yindices]
+                downV = np.flipud(downV)
+                fig2, ax2 = plt.subplots(figsize=(10,10))
+                q = ax2.quiver(xindices, yindices, downU, downV,color='blue')
+                fig2.savefig(name + '_' + str(pos) + '.png')
+                plt.close(fig2)
         xFFT = fft2(dirX)
         xConv = np.real(ifft2(np.multiply(xFFT,np.conjugate(xFFT))))
         yFFT = fft2(dirY)
         yConv = np.real(ifft2(np.multiply(yFFT,np.conjugate(yFFT))))
         convSum = np.add(xConv,yConv)
-        means = np.zeros(len(range(0,int(max_pixel_len),int(pixel_bin_width))))
+        means = np.array([])
+        inRadii = np.array([])
         for i in range(0,int(max_pixel_len),int(pixel_bin_width)):
-            means[i] = convSum[(radii > i -.5*pixel_bin_width)&(radii < i + .5*pixel_bin_width)].mean()/convSum[0,0]
+                inBin = convSum[(radii > i -.5*pixel_bin_width)&(radii < i + .5*pixel_bin_width)]
+                if(len(inBin) > 0):
+                        inRadii = np.append(inRadii, i)
+                        means = np.append(means, inBin.mean()/convSum[0,0])
         try:
-            corrLens[pos] = pix_size*findRoot(range(0,len(means)),means,decay_threshold)
+            corrLens[pos] = pix_size*findRoot(inRadii,means,decay_threshold)
         except ValueError:
             corrLens[pos] = 0
         pos += 1
@@ -79,5 +101,8 @@ def check_flow(file, channel, decay_threshold = 1/np.exp(1), min_corr_len = 25, 
     else:
         verdict = "LR correlation not detected"
     ax.plot(range(0,len(corrLens)),corrLens)
+
+    print("x mean: ", xMeans.mean(), "\n")
+    print("y mean: ", yMeans.mean(), "\n")
     
     return verdict, fig
