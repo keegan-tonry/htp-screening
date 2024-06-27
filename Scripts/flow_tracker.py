@@ -11,7 +11,7 @@ def findRoot(xValues, yValues,threshold):
     interpolator = Akima1DInterpolator(xValues, yValues)
     return optimize.root_scalar(lambda arg: interpolator([arg])[0]-threshold ,bracket=[min(xValues),max(xValues)]).root
 
-def check_flow(file, name, channel, decay_threshold = 1/np.exp(1), min_corr_len = 25, min_fraction = 0.5, frame_stride = 5, downsample = 8, pix_size=1, bin_width=1, verbose=False):
+def check_flow(file, name, channel, min_corr_len, min_fraction, frame_stride, downsample, pix_size, bin_width, decay_threshold = 1/np.exp(1)):
     #Width of annuli in pixels
     pixel_bin_width = np.ceil(bin_width / pix_size)
     #Length at which to stop computing correlators
@@ -44,9 +44,9 @@ def check_flow(file, name, channel, decay_threshold = 1/np.exp(1), min_corr_len 
     positions = np.array([0, int(np.floor(len(images)/2)), len(images) - frame_stride - 1])
 
     # Error Checking: Empty Images
-    #if (images == 0).any():
-    #    verdict = "Data not available for this channel."
-    #    return verdict, fig
+    if (images == 0).all():
+       verdict = "Data not available for this channel."
+       return verdict, fig
 
     xindices = np.arange(0, images[0].shape[0], downsample)
     yindices = np.arange(0, images[0].shape[1], downsample)

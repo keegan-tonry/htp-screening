@@ -35,7 +35,7 @@ def analyze_frames(image, threshold_percentage):
     else:
         return "Coarsening not detected"
 
-def check_coarse(file, channel, first_frame = 0, last_frame = None, threshold_percentage = 0.7, verbose=False):
+def check_coarse(file, channel, first_frame, last_frame, threshold_percentage):
     extrema_bounds_list = []
     extrema_bounds_idx_list = []
     areas_list = []
@@ -45,14 +45,14 @@ def check_coarse(file, channel, first_frame = 0, last_frame = None, threshold_pe
     im = file[:,:,:,channel]
 
     # Set last_frame to last frame of movie if unspecified
-    if last_frame == None: 
+    if last_frame == False: 
         last_frame = len(im) - 1
 
     fig, ax = plt.subplots(figsize=(5,5))
 
     if (im == 0).all(): # If image is blank, then end program early
         verdict = "Data not available for this channel."
-        return verdict, fig
+        return verdict, fig, np.array([])
 
     max_px_intensity = 1.1*np.max(im)
     min_px_intensity = np.min(im)
@@ -63,9 +63,11 @@ def check_coarse(file, channel, first_frame = 0, last_frame = None, threshold_pe
     near_zero_limit = 0.01
     minimum_area = 0.010
     
-    i_frame_data = im[first_frame] - min_px_intensity
-    f_frame_data = im[last_frame] - min_px_intensity
+    i_frame_data = im[first_frame]
+    f_frame_data = im[last_frame]
+    print(i_frame_data, f_frame_data)
     f_norm = np.mean(i_frame_data) / np.mean(f_frame_data)
+    print(f_norm)
     f_frame_data = f_norm * f_frame_data
 
     fig, ax = plt.subplots(figsize=(5,5))
@@ -87,24 +89,16 @@ def check_coarse(file, channel, first_frame = 0, last_frame = None, threshold_pe
     ax.axvline(x = in_cutoff)
     minimum_area = 0.01 * float(BSpline.basis_element(initial_spline[0]).integrate(0, in_cutoff))
 
-    initial_spline = splrep(plt_bins, i_count, s = 0.00005)
-
     ax.plot(plt_bins, i_count, '^-', ms=4, c='darkred', alpha=0.2, label= "frame " + str(first_frame+1)+" dist")
     ax.plot(plt_bins, f_count, 'v-', ms=4, c='darkorange',   alpha=0.2, label= "frame " + str(last_frame+1)+" dist")
     count_diff = f_count - i_count
     ax.plot(plt_bins, count_diff, 'D-', ms=2, c='red', label = "difference btwn")
-    
     ax.plot(plt_bins, BSpline(*initial_spline)(plt_bins), c='magenta', label='initial_fit')
     
     
     # ### get range for local extrema of interest ###
-    
-    spline = splrep(plt_bins, f_count - i_count, s = 0.00005)
-    t = spline[0]
-    
-    cumulative_count_diff = np.zeros_like(count_diff)
-    for i in range(len(cumulative_count_diff)):
-        cumulative_count_diff[i] = np.sum(count_diff[:i])
+
+    cumulative_count_diff = np.cumsum(count_diff)
     filtered_ccd = scipy.ndimage.gaussian_filter1d(cumulative_count_diff, 8)
     ax.plot(filtered_ccd, c = 'darkgreen', label = 'CDF')
     

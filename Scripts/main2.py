@@ -1,5 +1,5 @@
 from reader import read_file
-import os, csv, sys
+import os, csv, sys, yaml
 from resilience_tracker import check_resilience
 from flow_tracker import check_flow
 from coarse_tracker import check_coarse
@@ -9,28 +9,40 @@ import matplotlib.pyplot as plt
 from matplotlib import gridspec
 
 
-def execute_htp(filepath, channel_select=-1, resilience=True, flow=True, coarse=True, verbose=True, accept_dim=False):
-    def check(channel, resilience, flow, coarse):
+def execute_htp(filepath, config_data):
+    reader_data = config_data['reader']
+    channel_select, resilience, flow, coarsening, verbose, accept_dim = reader_data.values()
+    r_data = config_data['resilience_parameters']
+    f_data = config_data['flow_parameters']
+    c_data = config_data['coarse_parameters']
+    def check(channel, resilience, flow, coarse, resilience_data, flow_data, coarse_data):
         if resilience == True:
-            r, rfig, r_value, void_value = check_resilience(file, channel)
+            r_offset = resilience_data['r_offset']
+            pt_loss, pt_gain = resilience_data['percent_threshold'].values()
+            f_step = resilience_data['frame_step']
+            f_start, f_stop = resilience_data['evaluation_settings'].values()
+            r, rfig, r_value, void_value = check_resilience(file, channel, r_offset, pt_loss, pt_gain, f_step, f_start, f_stop)
         else:
             r = "Resilience not tested"
             rfig = None
             r_value = None
             void_value = None
         if flow == True:
-            f, ffig = check_flow(file, Path(filepath).stem+'_channel'+str(channel), channel)
+            mcorr_len, min_fraction, frame_step, downsample, pix_size, bin_width = flow_data.values()
+            f, ffig = check_flow(file, Path(filepath).stem+'_channel'+str(channel), channel, mcorr_len, min_fraction, frame_step, downsample, pix_size, bin_width)
         else:
             f = "Flow not tested"
             ffig = None
         if coarse == True:
-            c, cfig, c_areas = check_coarse(file, channel)
+            fframe, lframe = coarse_data['evaluation_settings'].values()
+            t_percent = coarse_data['threshold_percentage']
+            c, cfig, c_areas = check_coarse(file, channel, fframe, lframe, t_percent)
         else:
             c = "Coarseness not tested."
             cfig = None
             c_areas = None
 
-        figpath = strip_extension(filepath) + '_channel' + str(channel) + '_graphs.png'
+        figpath = remove_extension(filepath) + '_channel' + str(channel) + '_graphs.png'
         if verbose == True:
             fig = plt.figure(figsize = (15, 5))
             gs = gridspec.GridSpec(1,3)
@@ -58,12 +70,9 @@ def execute_htp(filepath, channel_select=-1, resilience=True, flow=True, coarse=
                 ax3.set_position([32.5/15, 1/10, 4/5, 4/5])
 
             plt.savefig(figpath)
-        if rfig != None:
-            plt.close(rfig)
-        if ffig != None:
-            plt.close(ffig)
-        if cfig != None:
-            plt.close(cfig)
+        plt.close(rfig)
+        plt.close(ffig)
+        plt.close(cfig)
             
         return [channel, r, f, c, r_value, void_value, c_areas]
     
@@ -83,15 +92,15 @@ def execute_htp(filepath, channel_select=-1, resilience=True, flow=True, coarse=
     if channel_select == -1:
         for channel in range(channels):
             print('Channel:', channel)
-            rfc.append(check(channel, resilience, flow, coarse))
+            rfc.append(check(channel, resilience, flow, coarsening, r_data, f_data, c_data))
     
     else:
         print('Channel: ', channel_select)
-        rfc.append(check(channel_select, resilience, flow, coarse))
+        rfc.append(check(channel_select, resilience, flow, coarsening, r_data, f_data, c_data))
 
     return rfc
 
-def strip_extension(filepath):
+def remove_extension(filepath):
     if filepath.endswith('.tiff'):
         return filepath.removesuffix('.tiff')
     if filepath.endswith('.tif'):
@@ -99,13 +108,14 @@ def strip_extension(filepath):
     if filepath.endswith('.nd2'):
         return filepath.removesuffix('.nd2')
 
-def process_directory(root_dir, channel, r = True, f = True, c = True, accept_dim = False):
+def process_directory(root_dir, config_data):
+    
     if os.path.isfile(root_dir):
         all_data = []
         file_path = root_dir
         filename = os.path.basename(file_path)
         dir_name = os.path.dirname(file_path)
-        rfc_data = execute_htp(file_path, channel, r, f, c, accept_dim)
+        rfc_data = execute_htp(file_path, config_data)
         if rfc_data == None:
             raise TypeError("Please input valid file type ('.nd2', '.tiff', '.tif')")
         all_data.append([filename])
@@ -140,7 +150,7 @@ def process_directory(root_dir, channel, r = True, f = True, c = True, accept_di
                     continue
                 file_path = os.path.join(dirpath, filename)
                 print(file_path)
-                rfc_data = execute_htp(file_path, channel, r, f, c, accept_dim)
+                rfc_data = execute_htp(file_path, config_data)
                 if rfc_data == None:
                     continue
                 all_data.append([file_path])
@@ -164,16 +174,13 @@ def process_directory(root_dir, channel, r = True, f = True, c = True, accept_di
 
 def main():
     dir_name = sys.argv[1]
-    channel = -1 if len(sys.argv) == 2 else int(sys.argv[2])
-    if len(sys.argv) >= 6:
-        r = bool(int(sys.argv[3]))
-        f = bool(int(sys.argv[4]))
-        c = bool(int(sys.argv[5]))
-        accept_dim = False if len(sys.argv) == 6 else bool(int(sys.argv[6]))
-        process_directory(dir_name, channel, r, f, c, accept_dim)
+    if len(sys.argv) == 3:
+        config_path = sys.argv[2]
     else:
-        accept_dim = False if len(sys.argv) == 3 else bool(int(sys.argv[3]))
-        process_directory(dir_name, channel, accept_dim = accept_dim)
+        config_path = 'htp-screening/Scripts/config.yaml'
+    with open(config_path, "r") as yamlfile:
+        config_data = yaml.load(yamlfile, Loader=yaml.CLoader)
+        process_directory(dir_name, config_data)
 
 if __name__ == "__main__":
     main()

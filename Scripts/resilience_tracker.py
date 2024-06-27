@@ -38,7 +38,7 @@ def track_void(image, threshold, step):
         void_lst.append(void_area)
     return void_lst
 
-def check_resilience(file, channel, R_offset=0, percent_threshold_loss = 0.9, percent_threshold_gain = 1.1, frame_step=1, frame_start_percent=0.9, frame_stop_percent=1, verbose=False):
+def check_resilience(file, channel, R_offset, percent_threshold_loss, percent_threshold_gain, frame_step, frame_start_percent, frame_stop_percent):
     #Note for parameters: frame_step (stepsize) used to reduce the runtime. 
     image = file[:,:,:,channel]
     frame_initial_percent = 0.05
@@ -46,7 +46,7 @@ def check_resilience(file, channel, R_offset=0, percent_threshold_loss = 0.9, pe
     fig, ax = plt.subplots(figsize = (5,5))
 
     # Error Checking: Empty Image
-    if (image == 0).any():
+    if (image == 0).all():
         verdict = "Data not available for this channel."
         return verdict, fig
     

@@ -23,7 +23,7 @@ def read_file(file_path, accept_dim = False):
         initial_mean_intensity = np.mean(i_frame_data)
         
         #bleach correction for each frame
-        for i in range(1, num_frames):
+        for i in range(0, num_frames):
             frame_data=im[i] - min_px_intensity
             # Calculate normalization factor relative to the first frame
             normalization_factor=initial_mean_intensity / np.mean(frame_data)
@@ -63,7 +63,7 @@ def read_file(file_path, accept_dim = False):
         if isinstance(file, np.ndarray) == False:
             return None
 
-    file = bleach_correction(file)
+    # file = bleach_correction(file)
     
     if accept_dim == False and check_first_frame_dim(file) == True:
         print(file_path + 'is too dim, skipping to next file...')
