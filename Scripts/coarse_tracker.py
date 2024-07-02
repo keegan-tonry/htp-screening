@@ -31,9 +31,9 @@ def analyze_frames(image, threshold_percentage):
 
     # Output "coarsening" if the difference for the last frame is x% larger than for the first frame
     if percentage_increase > threshold_percentage:
-        return "Coarsening detected."
+        return 1
     else:
-        return "Coarsening not detected"
+        return 0
 
 def check_coarse(file, channel, first_frame, last_frame, threshold_percentage):
     extrema_bounds_list = []

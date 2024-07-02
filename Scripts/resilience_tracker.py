@@ -11,6 +11,66 @@ from numpy.polynomial import Polynomial
 from skimage import measure, io
 from skimage.measure import label, regionprops
 
+from scipy.ndimage import label, generate_binary_structure
+
+from reader import read_file
+import numpy as np
+import matplotlib.pyplot as plt
+import imageio.v3 as iio
+from nd2reader import ND2Reader
+import math, pims, yaml, gc, csv, os, glob, pickle
+
+import numpy as np
+from numpy.polynomial import Polynomial
+
+from skimage import measure, io
+from skimage.measure import label, regionprops
+
+from scipy.ndimage import label, generate_binary_structure
+
+def check_span(image, R_thresh):
+    
+    def binarize(frame, offset_threshold):
+        avg_intensity = np.mean(frame)
+        threshold = avg_intensity * (1 + offset_threshold)
+        new_frame = np.where(frame < threshold, 0, 1)
+        return new_frame
+    
+    def check_connected(frame, axis=0):
+        # Ensures that either 
+        if axis == 0:
+            first = (frame[0] == 1).any()
+            last = (frame[len(frame) - 1] == 1).any()
+        elif axis == 1:
+            first = (frame[:,0] == 1).any()
+            last = (frame[:,len(frame[:]) - 1] == 1).any()
+        else:
+            raise Exception("Axis must be 0 or 1.")
+    
+        struct = generate_binary_structure(2, 2)
+    
+        frame_connections, num_features = label(input=frame, structure=struct)
+    
+        if axis == 0:
+            labeled_first = np.unique(frame_connections[0,:])
+            labeled_last = np.unique(frame_connections[-1,:])
+    
+        if axis == 1:
+            labeled_first = np.unique(frame_connections[:,0])
+            labeled_last = np.unique(frame_connections[:,-1])
+    
+        labeled_first = set(labeled_first[labeled_first != 0])
+        labeled_last = set(labeled_last[labeled_last != 0])
+    
+        if labeled_first.intersection(labeled_last):
+            return True
+        else:
+            return False
+        
+        
+    first_frame = binarize(image[0], R_thresh)
+    last_frame = binarize(image[-1], R_thresh)
+    return (check_connected(first_frame) and check_connected(last_frame)) or (check_connected(first_frame, axis = 1) and check_connected(last_frame, axis = 1))
 
 def track_void(image, threshold, step):
     def binarize(frame, offset_threshold):
@@ -27,8 +87,8 @@ def track_void(image, threshold, step):
         largest_region = max(regions, key = lambda r: r.area) # determines the region with the maximum area
         return largest_region.area # returns largest region area
     
-    #def find_largest_void(frame):
-        #return max(find_largest_void_mid(frame, find_void = True), find_largest_void_mid(frame, find_void = False))
+    def find_largest_void_regions(frame):
+        return max(find_largest_void_mid(frame, find_void = True), find_largest_void_mid(frame, find_void = False))
     
     void_lst = []
     
@@ -70,20 +130,19 @@ def check_resilience(file, channel, R_offset, percent_threshold_loss, percent_th
     #print(max_void_size)
     #Give judgement
     if avg_percent_change >= percent_threshold_loss and avg_percent_change <= percent_threshold_gain or max_void_size < 0.10:
-        verdict = "Persistance possibly detected."
-        r_value = 1
+        verdict = 1
     else:
-        verdict = "Persistance not detected"
-        r_value = 0
+        verdict = 0
     
     max_void_value = int(max_void_size*10)
+    spanning = check_span(image, R_offset)
     
-    return verdict, fig, r_value, max_void_value
+    return verdict, fig, max_void_value, spanning
 
 def main():
     file = read_file(sys.argv[1])
     channel = read_file(sys.argv[2])
-    verdict, fig, r_value, void_value = check_resilience(file, channel)
+    verdict, fig, void_value, spanning = check_resilience(file, channel)
 
 if __name__ == "__main__":
     main()

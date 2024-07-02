@@ -15,21 +15,22 @@ def execute_htp(filepath, config_data):
     r_data = config_data['resilience_parameters']
     f_data = config_data['flow_parameters']
     c_data = config_data['coarse_parameters']
+    
     def check(channel, resilience, flow, coarse, resilience_data, flow_data, coarse_data):
         if resilience == True:
             r_offset = resilience_data['r_offset']
             pt_loss, pt_gain = resilience_data['percent_threshold'].values()
             f_step = resilience_data['frame_step']
             f_start, f_stop = resilience_data['evaluation_settings'].values()
-            r, rfig, r_value, void_value = check_resilience(file, channel, r_offset, pt_loss, pt_gain, f_step, f_start, f_stop)
+            r, rfig, void_value, spanning = check_resilience(file, channel, r_offset, pt_loss, pt_gain, f_step, f_start, f_stop)
         else:
             r = "Resilience not tested"
             rfig = None
-            r_value = None
+            spanning = None
             void_value = None
         if flow == True:
             mcorr_len, min_fraction, frame_step, downsample, pix_size, bin_width = flow_data.values()
-            f, ffig = check_flow(file, Path(filepath).stem+'_channel'+str(channel), channel, mcorr_len, min_fraction, frame_step, downsample, pix_size, bin_width)
+            f, ffig = check_flow(file, remove_extension(filepath)+'_channel'+str(channel), channel, mcorr_len, min_fraction, frame_step, downsample, pix_size, bin_width)
         else:
             f = "Flow not tested"
             ffig = None
@@ -74,7 +75,7 @@ def execute_htp(filepath, config_data):
         plt.close(ffig)
         plt.close(cfig)
             
-        return [channel, r, f, c, r_value, void_value, c_areas]
+        return [channel, r, f, c, void_value, spanning, c_areas]
     
     file = read_file(filepath, accept_dim)
 
@@ -82,7 +83,6 @@ def execute_htp(filepath, config_data):
         return None
 
     channels = min(file.shape)
-    print('Total Channels:', channels)
     
     if (isinstance(channel_select, int) == False) or channel_select > channels:
         raise ValueError("Please give correct channel input (-1 for all channels, 0 for channel 1, etc)")
@@ -90,6 +90,7 @@ def execute_htp(filepath, config_data):
     rfc = []
     
     if channel_select == -1:
+        print('Total Channels:', channels)
         for channel in range(channels):
             print('Channel:', channel)
             rfc.append(check(channel, resilience, flow, coarsening, r_data, f_data, c_data))
@@ -108,6 +109,26 @@ def remove_extension(filepath):
     if filepath.endswith('.nd2'):
         return filepath.removesuffix('.nd2')
 
+def writer(data, directory):
+    if data:
+        headers = ['Channel', 'Resilience', 'Flow', 'Coarseness', 'Largest void', 'Span', 'Intensity Difference Area']
+        output_filepath = os.path.join(directory, "summary.csv")
+        with open(output_filepath, 'w', newline='') as csvfile:
+            csvwriter = csv.writer(csvfile)
+            for entry in all_data:
+                if isinstance(entry, list) and len(entry) == 1:
+                    # Write the file name
+                    csvwriter.writerow(entry)
+                    csvwriter.writerow(headers)  # Write headers after the filename
+                elif entry:
+                    # Write the headers if entry contains channel data
+                    csvwriter.writerow(headers)
+                    headers = []  # Ensure headers are only written once per file
+                    csvwriter.writerow(entry)
+                else:
+                    # Write an empty row
+                    csvwriter.writerow([])
+
 def process_directory(root_dir, config_data):
     
     if os.path.isfile(root_dir):
@@ -122,23 +143,7 @@ def process_directory(root_dir, config_data):
         all_data.extend(rfc_data)
         all_data.append([])
 
-        if all_data:
-            headers = ['Channel', 'Resilience', 'Flow', 'Coarseness', 'Screening on persistence', 'Largest void', 'Intensity Difference Area']
-            output_filepath = os.path.join(dir_name, "summary.csv")
-            with open(output_filepath, 'w', newline='') as csvfile:
-                csvwriter = csv.writer(csvfile)
-                for entry in all_data:
-                    if isinstance(entry, list) and len(entry) == 1:
-                        # Write the file name
-                        csvwriter.writerow(entry)
-                    elif entry:
-                        # Write the headers if entry contains channel data
-                        csvwriter.writerow(headers)
-                        headers = []  # Ensure headers are only written once per file
-                        csvwriter.writerow(entry)
-                    else:
-                        # Write an empty row
-                        csvwriter.writerow([])
+        writer(all_data, dir_name)
     else: 
         all_data = []
         for dirpath, dirnames, filenames in os.walk(root_dir):
@@ -157,20 +162,7 @@ def process_directory(root_dir, config_data):
                 all_data.extend(rfc_data)
                 all_data.append([])
 
-        if all_data:
-            headers = ['Channel', 'Resilience', 'Flow', 'Coarseness', 'Screening on persistence', 'Largest void', 'Intensity Difference Area']
-            output_file_path = os.path.join(root_dir, "summary.csv")
-            with open(output_file_path, 'w', newline='') as csvfile:
-                csvwriter = csv.writer(csvfile)
-                for entry in all_data:
-                    if isinstance(entry, list) and len(entry) == 1:
-                        # Write the file name
-                        csvwriter.writerow(entry)
-                        csvwriter.writerow(headers)  # Write headers after the filename
-                    elif entry:
-                        csvwriter.writerow(entry)
-                    else:
-                        csvwriter.writerow([])  # Write an empty row
+        writer(all_data, root_dir)
 
 def main():
     dir_name = sys.argv[1]

@@ -97,9 +97,9 @@ def check_flow(file, name, channel, min_corr_len, min_fraction, frame_stride, do
         pos += 1
     
     if(len(corrLens[corrLens>min_corr_len])/len(corrLens) > min_fraction):
-        verdict = "LR correlation possibly detected"
+        verdict = 1
     else:
-        verdict = "LR correlation not detected"
+        verdict = 0
     ax.plot(range(0,len(corrLens)),corrLens)
 
     print("x mean: ", xMeans.mean(), "\n")
