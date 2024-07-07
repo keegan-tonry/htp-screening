@@ -11,22 +11,7 @@ from numpy.polynomial import Polynomial
 from skimage import measure, io
 from skimage.measure import label, regionprops
 
-from scipy.ndimage import label, generate_binary_structure
-
-from reader import read_file
-import numpy as np
-import matplotlib.pyplot as plt
-import imageio.v3 as iio
-from nd2reader import ND2Reader
-import math, pims, yaml, gc, csv, os, glob, pickle
-
-import numpy as np
-from numpy.polynomial import Polynomial
-
-from skimage import measure, io
-from skimage.measure import label, regionprops
-
-from scipy.ndimage import label, generate_binary_structure
+from scipy import ndimage
 
 def check_span(image, R_thresh):
     
@@ -47,9 +32,9 @@ def check_span(image, R_thresh):
         else:
             raise Exception("Axis must be 0 or 1.")
     
-        struct = generate_binary_structure(2, 2)
+        struct = ndimage.generate_binary_structure(2, 2)
     
-        frame_connections, num_features = label(input=frame, structure=struct)
+        frame_connections, num_features = ndimage.label(input=frame, structure=struct)
     
         if axis == 0:
             labeled_first = np.unique(frame_connections[0,:])
