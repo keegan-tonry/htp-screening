@@ -115,7 +115,7 @@ def writer(data, directory):
         output_filepath = os.path.join(directory, "summary.csv")
         with open(output_filepath, 'w', newline='') as csvfile:
             csvwriter = csv.writer(csvfile)
-            for entry in all_data:
+            for entry in data:
                 if isinstance(entry, list) and len(entry) == 1:
                     # Write the file name
                     csvwriter.writerow(entry)
@@ -169,6 +169,7 @@ def main():
     if len(sys.argv) == 3:
         config_path = sys.argv[2]
     else:
+        # Update this with your filepath -- if your directory is htp-screening-main, use that as the highest level directory instead
         config_path = 'htp-screening/Scripts/config.yaml'
     with open(config_path, "r") as yamlfile:
         config_data = yaml.load(yamlfile, Loader=yaml.CLoader)
