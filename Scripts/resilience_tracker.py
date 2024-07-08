@@ -71,17 +71,29 @@ def track_void(image, threshold, step):
         regions = regionprops(labeled) # determines the region properties of the labeled
         largest_region = max(regions, key = lambda r: r.area) # determines the region with the maximum area
         return largest_region.area # returns largest region area
+
+    def largest_island_position(frame):      
+        labeled, a = label(frame, connectivity = 2, return_num =True) # identify the regions of connectivity 2
+        regions = regionprops(labeled) # determines the region properties of the labeled
+        largest_region = max(regions, key = lambda r: r.area) # determines the region with the maximum area
+        return largest_region.centroid # returns largest region area
     
     def find_largest_void_regions(frame):
         return max(find_largest_void_mid(frame, find_void = True), find_largest_void_mid(frame, find_void = False))
     
     void_lst = []
+    island_area_lst = []
+    island_position_lst = []
     
     for i in range(0, len(image), step):
         new_frame = binarize(image[i], threshold)
         void_area = find_largest_void(new_frame)
+        island_area = find_largest_void(new_frame, find_void = False)
+        island_position = largest_island_position(new_frame)
         void_lst.append(void_area)
-    return void_lst
+        island_area_lst.append(island_area)
+        island_position_lst.append(island_position)
+    return void_lst, island_area_lst, island_position_lst
 
 def check_resilience(file, channel, R_offset, percent_threshold_loss, percent_threshold_gain, frame_step, frame_start_percent, frame_stop_percent):
     #Note for parameters: frame_step (stepsize) used to reduce the runtime. 
@@ -95,7 +107,7 @@ def check_resilience(file, channel, R_offset, percent_threshold_loss, percent_th
         verdict = "Data not available for this channel."
         return verdict, fig
     
-    largest_void_lst = track_void(image, R_offset, frame_step)
+    largest_void_lst, island_area_lst, island_position_lst = track_void(image, R_offset, frame_step)
     start_index = int(len(largest_void_lst) * frame_start_percent)
     stop_index = int(len(largest_void_lst) * frame_stop_percent)
     start_initial_index = int(len(largest_void_lst)*frame_initial_percent)
@@ -110,9 +122,8 @@ def check_resilience(file, channel, R_offset, percent_threshold_loss, percent_th
     
     avg_percent_change = np.mean(largest_void_lst[start_index:stop_index])/percent_gain_initial_list
     max_void_size = max(largest_void_lst)/(len(image[0,0,:])*len(image[0,:,0]))
-    #print(avg_percent_change)
-    #print("max void size")
-    #print(max_void_size)
+    island_size = max(island_area_lst)/(len(image[0,0,:])*len(image[0,:,0]))
+    island_movement = np.array(island_position_lst[0]) - np.array(island_position_lst[-1])
     #Give judgement
     if avg_percent_change >= percent_threshold_loss and avg_percent_change <= percent_threshold_gain or max_void_size < 0.10:
         verdict = 1
@@ -122,7 +133,7 @@ def check_resilience(file, channel, R_offset, percent_threshold_loss, percent_th
     max_void_value = int(max_void_size*10)
     spanning = check_span(image, R_offset)
     
-    return verdict, fig, max_void_value, spanning
+    return verdict, fig, max_void_value, spanning, island_size, island_movement, avg_percent_change
 
 def main():
     file = read_file(sys.argv[1])
