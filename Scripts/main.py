@@ -170,7 +170,8 @@ def main():
         config_path = sys.argv[2]
     else:
         # Update this with your filepath -- if your directory is htp-screening-main, use that as the highest level directory instead
-        config_path = 'htp-screening\Scripts\config.yaml'
+        config_dir_path = os.path.join('htp-screening', 'Scripts')
+        config_path = os.path.join(config_dir_path, 'config.yaml')
     with open(config_path, "r") as yamlfile:
         config_data = yaml.load(yamlfile, Loader=yaml.CLoader)
         process_directory(dir_name, config_data)
