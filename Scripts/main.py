@@ -22,7 +22,7 @@ def execute_htp(filepath, config_data):
             pt_loss, pt_gain = resilience_data['percent_threshold'].values()
             f_step = resilience_data['frame_step']
             f_start, f_stop = resilience_data['evaluation_settings'].values()
-            r, rfig, void_value, spanning = check_resilience(file, channel, r_offset, pt_loss, pt_gain, f_step, f_start, f_stop)
+            r, rfig, void_value, spanning, island_size, island_movement, Void_Growth = check_resilience(file, channel, r_offset, pt_loss, pt_gain, f_step, f_start, f_stop)
         else:
             r = "Resilience not tested"
             rfig = None
@@ -75,7 +75,7 @@ def execute_htp(filepath, config_data):
         plt.close(ffig)
         plt.close(cfig)
             
-        return [channel, r, f, c, void_value, spanning, c_areas]
+        return [channel, r, f, c, void_value, spanning, c_areas, island_size, island_movement, Void_Growth]
     
     file = read_file(filepath, accept_dim)
 
@@ -111,7 +111,7 @@ def remove_extension(filepath):
 
 def writer(data, directory):
     if data:
-        headers = ['Channel', 'Resilience', 'Flow', 'Coarseness', 'Largest void', 'Span', 'Intensity Difference Area']
+        headers = ['Channel', 'Resilience', 'Flow', 'Coarseness', 'Largest void', 'Span', 'Intensity Difference Area', 'Island Size', 'Island Movement', 'Void Growth']
         output_filepath = os.path.join(directory, "summary.csv")
         with open(output_filepath, 'w', newline='') as csvfile:
             csvwriter = csv.writer(csvfile)
@@ -170,7 +170,7 @@ def main():
         config_path = sys.argv[2]
     else:
         # Update this with your filepath -- if your directory is htp-screening-main, use that as the highest level directory instead
-        config_path = 'htp-screening/Scripts/config.yaml'
+        config_path = 'htp-screening\Scripts\config.yaml'
     with open(config_path, "r") as yamlfile:
         config_data = yaml.load(yamlfile, Loader=yaml.CLoader)
         process_directory(dir_name, config_data)
