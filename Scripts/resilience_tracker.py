@@ -131,6 +131,7 @@ def check_resilience(file, channel, R_offset, percent_threshold_loss, percent_th
         verdict = 0
     
     max_void_value = int(max_void_size*10)
+    island_size = int(max_void_size*10)
     spanning = check_span(image, R_offset)
     
     return verdict, fig, max_void_value, spanning, island_size, island_movement, avg_percent_change
@@ -138,7 +139,7 @@ def check_resilience(file, channel, R_offset, percent_threshold_loss, percent_th
 def main():
     file = read_file(sys.argv[1])
     channel = read_file(sys.argv[2])
-    verdict, fig, void_value, spanning = check_resilience(file, channel)
+    verdict, fig, void_value, spanning, island_size, island_movement, avg_percent_change = check_resilience(file, channel)
 
 if __name__ == "__main__":
     main()
