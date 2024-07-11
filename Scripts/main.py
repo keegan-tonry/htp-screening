@@ -22,7 +22,7 @@ def execute_htp(filepath, config_data):
             pt_loss, pt_gain = resilience_data['percent_threshold'].values()
             f_step = resilience_data['frame_step']
             f_start, f_stop = resilience_data['evaluation_settings'].values()
-            r, rfig, void_value, spanning = check_resilience(file, channel, r_offset, pt_loss, pt_gain, f_step, f_start, f_stop)
+            r, rfig, void_value, spanning, island_size, island_movement, Void_Growth = check_resilience(file, channel, r_offset, pt_loss, pt_gain, f_step, f_start, f_stop)
         else:
             r = "Resilience not tested"
             rfig = None
@@ -30,14 +30,15 @@ def execute_htp(filepath, config_data):
             void_value = None
         if flow == True:
             mcorr_len, min_fraction, frame_step, downsample, pix_size, bin_width = flow_data.values()
-            f, ffig = check_flow(file, remove_extension(filepath)+'_channel'+str(channel), channel, mcorr_len, min_fraction, frame_step, downsample, pix_size, bin_width)
+            flow_field_figpath = remove_extension(filepath)+'_channel'+str(channel)
+            f, ffig = check_flow(file, flow_field_figpath, channel, mcorr_len, min_fraction, frame_step, downsample, pix_size, bin_width)
         else:
             f = "Flow not tested"
             ffig = None
         if coarse == True:
             fframe, lframe = coarse_data['evaluation_settings'].values()
             t_percent = coarse_data['threshold_percentage']
-            c, cfig, c_areas = check_coarse(file, channel, fframe, lframe, t_percent)
+            c, cfig, c_area1, c_area2 = check_coarse(filepath, file, channel, fframe, lframe, t_percent)
         else:
             c = "Coarseness not tested."
             cfig = None
@@ -75,7 +76,7 @@ def execute_htp(filepath, config_data):
         plt.close(ffig)
         plt.close(cfig)
             
-        return [channel, r, f, c, void_value, spanning, c_areas]
+        return [channel, r, f, c, void_value, spanning, c_area1, c_area2, island_size, island_movement, Void_Growth]
     
     file = read_file(filepath, accept_dim)
 
@@ -111,7 +112,7 @@ def remove_extension(filepath):
 
 def writer(data, directory):
     if data:
-        headers = ['Channel', 'Resilience', 'Flow', 'Coarseness', 'Largest void', 'Span', 'Intensity Difference Area']
+        headers = ['Channel', 'Resilience', 'Flow', 'Coarseness', 'Largest void', 'Span', 'Intensity Difference Area 1', 'Intensity Difference Area 2', 'Island Size', 'Island Movement', 'Void Growth']
         output_filepath = os.path.join(directory, "summary.csv")
         with open(output_filepath, 'w', newline='') as csvfile:
             csvwriter = csv.writer(csvfile)
@@ -170,7 +171,8 @@ def main():
         config_path = sys.argv[2]
     else:
         # Update this with your filepath -- if your directory is htp-screening-main, use that as the highest level directory instead
-        config_path = 'htp-screening/Scripts/config.yaml'
+        config_dir_path = os.path.join('htp-screening', 'Scripts')
+        config_path = os.path.join(config_dir_path, 'config.yaml')
     with open(config_path, "r") as yamlfile:
         config_data = yaml.load(yamlfile, Loader=yaml.CLoader)
         process_directory(dir_name, config_data)
