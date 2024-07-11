@@ -30,14 +30,15 @@ def execute_htp(filepath, config_data):
             void_value = None
         if flow == True:
             mcorr_len, min_fraction, frame_step, downsample, pix_size, bin_width = flow_data.values()
-            f, ffig = check_flow(file, remove_extension(filepath)+'_channel'+str(channel), channel, mcorr_len, min_fraction, frame_step, downsample, pix_size, bin_width)
+            flow_field_figpath = remove_extension(filepath)+'_channel'+str(channel)
+            f, ffig = check_flow(file, flow_field_figpath, channel, mcorr_len, min_fraction, frame_step, downsample, pix_size, bin_width)
         else:
             f = "Flow not tested"
             ffig = None
         if coarse == True:
             fframe, lframe = coarse_data['evaluation_settings'].values()
             t_percent = coarse_data['threshold_percentage']
-            c, cfig, c_areas = check_coarse(file, channel, fframe, lframe, t_percent)
+            c, cfig, c_area1, c_area2 = check_coarse(filepath, file, channel, fframe, lframe, t_percent)
         else:
             c = "Coarseness not tested."
             cfig = None
@@ -75,7 +76,7 @@ def execute_htp(filepath, config_data):
         plt.close(ffig)
         plt.close(cfig)
             
-        return [channel, r, f, c, void_value, spanning, c_areas, island_size, island_movement, Void_Growth]
+        return [channel, r, f, c, void_value, spanning, c_area1, c_area2, island_size, island_movement, Void_Growth]
     
     file = read_file(filepath, accept_dim)
 
@@ -111,7 +112,7 @@ def remove_extension(filepath):
 
 def writer(data, directory):
     if data:
-        headers = ['Channel', 'Resilience', 'Flow', 'Coarseness', 'Largest void', 'Span', 'Intensity Difference Area', 'Island Size', 'Island Movement', 'Void Growth']
+        headers = ['Channel', 'Resilience', 'Flow', 'Coarseness', 'Largest void', 'Span', 'Intensity Difference Area 1', 'Intensity Difference Area 2', 'Island Size', 'Island Movement', 'Void Growth']
         output_filepath = os.path.join(directory, "summary.csv")
         with open(output_filepath, 'w', newline='') as csvfile:
             csvwriter = csv.writer(csvfile)
