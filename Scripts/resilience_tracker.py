@@ -48,9 +48,9 @@ def check_span(image, R_thresh):
         labeled_last = set(labeled_last[labeled_last != 0])
     
         if labeled_first.intersection(labeled_last):
-            return True
+            return 1
         else:
-            return False
+            return 0
         
         
     first_frame = binarize(image[0], R_thresh)
