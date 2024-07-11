@@ -53,15 +53,15 @@ def analyze_frames(nd2_file_path, threshold_percentage):
             for first, last in zip(avg_diff_first_five, avg_diff_last_five)
         ]
         
-        # Print the average mean, mode, and percentage increase for each channel
-        for i, (mean_first, mode_first, mean_last, mode_last, increase) in enumerate(zip(
-                avg_means_first_five, avg_modes_first_five, avg_means_last_five, avg_modes_last_five, percentage_increase)):
-            print(f"Channel {i}:")
-            print(f"  Average Mean (First 5 Frames): {mean_first:.2f}")
-            print(f"  Average Mode (First 5 Frames): {mode_first:.2f}")
-            print(f"  Average Mean (Last 5 Frames): {mean_last:.2f}")
-            print(f"  Average Mode (Last 5 Frames): {mode_last:.2f}")
-            print(f"  Percentage Increase: {increase:.2f}%")
+        # # Print the average mean, mode, and percentage increase for each channel
+        # for i, (mean_first, mode_first, mean_last, mode_last, increase) in enumerate(zip(
+        #         avg_means_first_five, avg_modes_first_five, avg_means_last_five, avg_modes_last_five, percentage_increase)):
+        #     print(f"Channel {i}:")
+        #     print(f"  Average Mean (First 5 Frames): {mean_first:.2f}")
+        #     print(f"  Average Mode (First 5 Frames): {mode_first:.2f}")
+        #     print(f"  Average Mean (Last 5 Frames): {mean_last:.2f}")
+        #     print(f"  Average Mode (Last 5 Frames): {mode_last:.2f}")
+        #     print(f"  Percentage Increase: {increase:.2f}%")
         
         # Check if any channel meets the "coarsening" criteria
         coarsening_result = 0
