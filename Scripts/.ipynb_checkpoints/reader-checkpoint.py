@@ -64,10 +64,6 @@ def read_file(file_path, accept_dim = False):
             return None
 
     # file = bleach_correction(file)
-
-    if (file == 0).all():
-        print('Empty file: can not process, skipping to next file...')
-        return None
     
     if accept_dim == False and check_first_frame_dim(file) == True:
         print(file_path + 'is too dim, skipping to next file...')
