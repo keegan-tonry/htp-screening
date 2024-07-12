@@ -123,7 +123,7 @@ def check_resilience(file, channel, R_offset, percent_threshold_loss, percent_th
     avg_percent_change = np.mean(largest_void_lst[start_index:stop_index])/percent_gain_initial_list
     max_void_size = max(largest_void_lst)/(len(image[0,0,:])*len(image[0,:,0]))
     island_size = max(island_area_lst)/(len(image[0,0,:])*len(image[0,:,0]))
-    island_movement = np.array(island_position_lst[0]) - np.array(island_position_lst[-1])
+    island_movement = np.linalg.norm(np.array(island_position_lst[0]) - np.array(island_position_lst[-1]))/len(image[0,:,0])
     #Give judgement
     if avg_percent_change >= percent_threshold_loss and avg_percent_change <= percent_threshold_gain or max_void_size < 0.10:
         verdict = 1
