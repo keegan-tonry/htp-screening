@@ -60,7 +60,6 @@ def check_flow(file, name, channel, min_corr_len, min_fraction, frame_stride, do
             fig2, ax2 = plt.subplots(figsize=(10,10))
             q = ax2.quiver(xindices, yindices, downU, downV,color='blue')
             figpath2 = os.path.join(name,  'Frame '+ str(beg) + ' Flow Field.png')
-            print(figpath2)
             fig2.savefig(figpath2)
             plt.close(fig2)
         vxMeans = np.append(vxMeans, downU.mean())
