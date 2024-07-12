@@ -180,13 +180,13 @@ def process_directory(root_dir, config_data):
         writer(all_data, root_dir)
 
 def main():
+    abs_path = os.path.abspath(sys.argv[0])
     dir_name = sys.argv[1]
     if len(sys.argv) == 3:
         config_path = sys.argv[2]
     else:
         # Update this with your filepath -- if your directory is htp-screening-main, use that as the highest level directory instead
-        config_dir_path = os.path.join('htp-screening', 'Scripts')
-        config_path = os.path.join(config_dir_path, 'config.yaml')
+        config_path = os.path.join(os.path.dirname(abs_path), 'config.yaml')
     with open(config_path, "r") as yamlfile:
         config_data = yaml.load(yamlfile, Loader=yaml.CLoader)
         process_directory(dir_name, config_data)
