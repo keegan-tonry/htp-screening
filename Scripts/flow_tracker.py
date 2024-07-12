@@ -23,7 +23,7 @@ def check_flow(file, name, channel, min_corr_len, min_fraction, frame_stride, do
     max_pixel_len = np.rint(max_len / pix_size)
     #Cutoff magnitude to consider a vector to be null; also helps to avoid divide-by-zero errors
     flt_tol = 1e-10
-    def execute_opt_flow(images, start, stop, divs, xMeans, yMeans, vxMeans, vyMeans, corrLens, pos, xindices, yindices):
+    def execute_opt_flow(images, start, stop, divs, xMeans, yMeans, vxMeans, vyMeans, speeds, pos, xindices, yindices):
         def normalVectors(velocities):
             #Find velocity directions
             def normalize(vector):
@@ -50,6 +50,7 @@ def check_flow(file, name, channel, min_corr_len, min_fraction, frame_stride, do
         downU = np.flipud(downU)
         downV = -1*flow[:,:,1][xindices][:,yindices]
         downV = np.flipud(downV)
+        speed = (downU ** 2 + downV ** 2) ** (1/2)
         if np.isin(beg, positions):
             fig2, ax2 = plt.subplots(figsize=(10,10))
             q = ax2.quiver(xindices, yindices, downU, downV,color='blue')
@@ -58,8 +59,8 @@ def check_flow(file, name, channel, min_corr_len, min_fraction, frame_stride, do
             plt.close(fig2)
         vxMeans = np.append(vxMeans, downU.mean())
         vyMeans = np.append(vyMeans, downV.mean())        
-    
-        return [xMeans, yMeans, vxMeans, vyMeans, divs]
+        speeds = np.append(speeds, speed.mean())
+        return [xMeans, yMeans, vxMeans, vyMeans, speeds, divs]
 
     fig, ax = plt.subplots(figsize=(5,5))
 
@@ -87,21 +88,23 @@ def check_flow(file, name, channel, min_corr_len, min_fraction, frame_stride, do
     yMeans = np.array([])
     vxMeans = np.array([])
     vyMeans = np.array([])
+    speeds = np.array([])
     divs = np.array([])
     
     for beg in range(0,len(images)-frame_stride,frame_stride):
         end = beg + frame_stride
-        arr = execute_opt_flow(images, beg, end, divs, xMeans, yMeans, vxMeans, vyMeans, corrLens, pos, xindices, yindices)
-        xMeans, yMeans, vxMeans, vyMeans, divs = arr
+        arr = execute_opt_flow(images, beg, end, divs, xMeans, yMeans, vxMeans, vyMeans, speeds, pos, xindices, yindices)
+        xMeans, yMeans, vxMeans, vyMeans, speeds, divs = arr
         pos += 1
 
     beg = len(images) - frame_stride
     end = len(images) - 1
-    arr = execute_opt_flow(images, beg, end, divs, xMeans, yMeans, vxMeans, vyMeans, corrLens, pos, xindices, yindices)
-    xMeans, yMeans, vxMeans, vyMeans, divs = arr
+    arr = execute_opt_flow(images, beg, end, divs, xMeans, yMeans, vxMeans, vyMeans, speeds, pos, xindices, yindices)
+    xMeans, yMeans, vxMeans, vyMeans, speeds, divs = arr
     direct = math.atan2(yMeans.mean(), xMeans.mean())
     mean_div = divs.mean()
     # print("x dir: ", xMeans.mean(), "\n","y direc: ", yMeans.mean(), "\n","vx mean: ", vxMeans.mean(), "\n","vy mean: ", vyMeans.mean(), "\n", "angle:", direct, "\n", "divergence mean:", mean_div)
-    avg_vel = (vxMeans.mean() ** 2 + vyMeans.mean() ** 2) ** (1/2)
+    mean_vel = (vxMeans.mean() ** 2 + vyMeans.mean() ** 2) ** (1/2)
+    mean_speed = speeds.mean()
     
-    return None, direct, avg_vel, mean_div
+    return None, direct, mean_vel, mean_speed, mean_div

@@ -41,11 +41,12 @@ def execute_htp(filepath, config_data):
             void_growth = None
         if flow == True:
             mcorr_len, min_fraction, frame_step, downsample, pix_size, bin_width = flow_data.values()
-            ffig, direct, avg_vel, avg_div = check_flow(file, fig_channel_dir_name, channel, mcorr_len, min_fraction, frame_step, downsample, pix_size, bin_width)
+            ffig, direct, avg_vel, avg_speed, avg_div = check_flow(file, fig_channel_dir_name, channel, mcorr_len, min_fraction, frame_step, downsample, pix_size, bin_width)
         else:
             ffig = None
             direct = None
             avg_vel = None
+            avg_speed = None
             avg_div = None
         if coarse == True:
             fframe, lframe = coarse_data['evaluation_settings'].values()
@@ -89,7 +90,7 @@ def execute_htp(filepath, config_data):
         plt.close(ffig)
         plt.close(cfig)
             
-        return [channel, r, c, void_value, spanning, island_size, island_movement, void_growth, direct, avg_vel, avg_div, c_area1, c_area2]
+        return [channel, r, c, void_value, spanning, island_size, island_movement, void_growth, direct, avg_vel, avg_speed, avg_div, c_area1, c_area2]
     
     file = read_file(filepath, accept_dim)
 
@@ -125,7 +126,7 @@ def remove_extension(filepath):
 
 def writer(data, directory):
     if data:
-        headers = ['Channel', 'Resilience', 'Coarseness', 'Largest void', 'Span', 'Island Size', 'Island Movement', 'Void Growth', "Flow Direction", "Average Velocity", "Average Divergence", 'Intensity Difference Area 1', 'Intensity Difference Area 2']
+        headers = ['Channel', 'Resilience', 'Coarseness', 'Largest void', 'Span', 'Island Size', 'Island Movement', 'Void Growth', "Flow Direction", "Average Velocity", "Average Speed", "Average Divergence", 'Intensity Difference Area 1', 'Intensity Difference Area 2']
         output_filepath = os.path.join(directory, "summary.csv")
         with open(output_filepath, 'w', newline='') as csvfile:
             csvwriter = csv.writer(csvfile)
