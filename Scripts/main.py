@@ -51,7 +51,8 @@ def execute_htp(filepath, config_data):
         if coarse == True:
             fframe, lframe = coarse_data['evaluation_settings'].values()
             t_percent = coarse_data['threshold_percentage']
-            c, cfig, c_area1, c_area2 = check_coarse(filepath, file, channel, fframe, lframe, t_percent)
+            percent_frames = coarse_data['mean_mode_frames_percent']
+            c, cfig, c_area1, c_area2 = check_coarse(file, channel, fframe, lframe, t_percent, percent_frames)
         else:
             c = "Coarseness not tested."
             cfig = None

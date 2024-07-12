@@ -15,8 +15,9 @@ def calculate_mean_mode(frame):
     mode_intensity = mode_intensity[0] if mode_intensity.size > 0 else np.nan
     return mean_intensity, mode_intensity
 
-def analyze_frames(video, threshold_percentage):
+def analyze_frames(video, threshold_percentage, frames_percent):
     num_frames = video.shape[0]
+    num_frame_analysis = int(frames_percent * num_frames / 100)
     def get_mean_mode_diffs(frames):
         diffs = []
         means = []
@@ -35,15 +36,15 @@ def analyze_frames(video, threshold_percentage):
         return avg_diffs, avg_means, avg_modes
         
     # Get the first five frames and the last five frames
-    first_five_frames = [video[i] for i in range(5)]
-    last_five_frames = [video[num_frames - 1 - i] for i in range(5)]
+    first_frames = [video[i] for i in range(num_frames_analysis)]
+    last_frames = [video[num_frames - 1 - i] for i in range(num_frames_analysis)]
         
     # Calculate the average difference, mean, and mode for the first and last five frames for each channel
-    avg_diff_first_five, avg_means_first_five, avg_modes_first_five = get_mean_mode_diffs(first_five_frames)
-    avg_diff_last_five, avg_means_last_five, avg_modes_last_five = get_mean_mode_diffs(last_five_frames)
+    avg_diff_first, avg_means_first, avg_modes_first = get_mean_mode_diffs(first_frames)
+    avg_diff_last, avg_means_last, avg_modes_last = get_mean_mode_diffs(last_frames)
         
     # Calculate the percentage increase for each channel
-    percentage_increase = (avg_diff_last_five - avg_diff_first_five)/avg_diff_first_five * 100 if avg_diff_first_five != 0 else np.nan
+    percentage_increase = (avg_diff_last - avg_diff_first)/avg_diff_first * 100 if avg_diff_first != 0 else np.nan
         
     # # Print the average mean, mode, and percentage increase for each channel
     # for i, (mean_first, mode_first, mean_last, mode_last, increase) in enumerate(zip(
@@ -61,7 +62,7 @@ def analyze_frames(video, threshold_percentage):
         coarsening_result = 1
     return coarsening_result
 
-def check_coarse(filepath, file, channel, first_frame, last_frame, threshold_percentage):
+def check_coarse(file, channel, first_frame, last_frame, threshold_percentage, frames_percent):
     extrema_bounds_list = []
     extrema_bounds_idx_list = []
     areas_list = []
@@ -136,7 +137,7 @@ def check_coarse(filepath, file, channel, first_frame, last_frame, threshold_per
         filtered_ccd[peaks_min] = np.array([0])
     areas = np.append(np.abs(filtered_ccd[peaks_max][0]), np.abs(filtered_ccd[peaks_max][0] - filtered_ccd[peaks_min][0]))
 
-    verdict = analyze_frames(im, threshold_percentage)
+    verdict = analyze_frames(im, threshold_percentage, frames_percent)
 
     ax.axhline(0, color='dimgray', alpha=0.6)
     ax.set_xlabel("Pixel intensity value")
