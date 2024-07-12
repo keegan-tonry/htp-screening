@@ -7,12 +7,6 @@ from scipy.interpolate import Akima1DInterpolator
 from scipy import optimize
 import os, math
 
-#Find the first point at which a spline interpolant for a set of correlator values descends below a certain threshold
-def findRoot(xValues, yValues,threshold):
-    interpolator = Akima1DInterpolator(xValues, yValues)
-    return optimize.root_scalar(lambda arg: interpolator([arg])[0]-threshold ,bracket=[min(xValues),max(xValues)]).root
-
-
 def divergence_npgrad(flow):
     flow = np.swapaxes(flow, 0, 1)
     Fx, Fy = flow[:, :, 0], flow[:, :, 1]
@@ -64,22 +58,6 @@ def check_flow(file, name, channel, min_corr_len, min_fraction, frame_stride, do
             plt.close(fig2)
         vxMeans = np.append(vxMeans, downU.mean())
         vyMeans = np.append(vyMeans, downV.mean())        
-        xFFT = fft2(dirX)
-        xConv = np.real(ifft2(np.multiply(xFFT,np.conjugate(xFFT))))
-        yFFT = fft2(dirY)
-        yConv = np.real(ifft2(np.multiply(yFFT,np.conjugate(yFFT))))
-        convSum = np.add(xConv,yConv)
-        means = np.array([])
-        inRadii = np.array([])
-        for i in range(0,int(max_pixel_len),int(pixel_bin_width)):
-                inBin = convSum[(radii > i -.5*pixel_bin_width)&(radii < i + .5*pixel_bin_width)]
-                if(len(inBin) > 0):
-                        inRadii = np.append(inRadii, i)
-                        means = np.append(means, inBin.mean()/convSum[0,0])
-        try:
-            corrLens[pos] = pix_size*findRoot(inRadii,means,decay_threshold)
-        except ValueError:
-            corrLens[pos] = 0
     
         return [xMeans, yMeans, vxMeans, vyMeans, divs]
 
@@ -121,15 +99,9 @@ def check_flow(file, name, channel, min_corr_len, min_fraction, frame_stride, do
     end = len(images) - 1
     arr = execute_opt_flow(images, beg, end, divs, xMeans, yMeans, vxMeans, vyMeans, corrLens, pos, xindices, yindices)
     xMeans, yMeans, vxMeans, vyMeans, divs = arr
-    
-    if(len(corrLens[corrLens>min_corr_len])/len(corrLens) > min_fraction):
-        verdict = 1
-    else:
-        verdict = 0
-    ax.plot(range(0,len(corrLens)),corrLens)
     direct = math.atan2(yMeans.mean(), xMeans.mean())
     mean_div = divs.mean()
     # print("x dir: ", xMeans.mean(), "\n","y direc: ", yMeans.mean(), "\n","vx mean: ", vxMeans.mean(), "\n","vy mean: ", vyMeans.mean(), "\n", "angle:", direct, "\n", "divergence mean:", mean_div)
     avg_vel = (vxMeans.mean() ** 2 + vyMeans.mean() ** 2) ** (1/2)
     
-    return verdict, fig, direct, avg_vel, mean_div
+    return None, direct, avg_vel, mean_div
