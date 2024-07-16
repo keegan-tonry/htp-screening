@@ -1,5 +1,5 @@
 from reader import read_file
-import os, csv, sys, yaml
+import os, csv, sys, yaml, time
 from resilience_tracker import check_resilience
 from flow_tracker import check_flow
 from coarse_tracker import check_coarse
@@ -152,6 +152,7 @@ def process_directory(root_dir, config_data):
         file_path = root_dir
         filename = os.path.basename(file_path)
         dir_name = os.path.dirname(file_path)
+        start_time = time.time()
         rfc_data = execute_htp(file_path, config_data)
         if rfc_data == None:
             raise TypeError("Please input valid file type ('.nd2', '.tiff', '.tif')")
@@ -159,18 +160,24 @@ def process_directory(root_dir, config_data):
         all_data.extend(rfc_data)
         all_data.append([])
 
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        print('Time Elapsed:', elapsed_time)
+
         writer(all_data, dir_name)
     else: 
         all_data = []
+        start_folder_time = time.time()
         for dirpath, dirnames, filenames in os.walk(root_dir):
     
-            dirnames[:] = [d for d in dirnames if d != "Resilience analysis" and d != "contraction_analysis"]
+            dirnames[:] = [d for d in dirnames]
     
             for filename in filenames:
                 if filename.startswith('._'):
                     continue
                 file_path = os.path.join(dirpath, filename)
                 print(file_path)
+                start_time = time.time()
                 rfc_data = execute_htp(file_path, config_data)
                 if rfc_data == None:
                     continue
@@ -178,7 +185,16 @@ def process_directory(root_dir, config_data):
                 all_data.extend(rfc_data)
                 all_data.append([])
 
+                end_time = time.time()
+                elapsed_time = end_time - start_time
+                print('Time Elapsed:', elapsed_time)
+
         writer(all_data, root_dir)
+        end_folder_time = time.time()
+        elapsed_folder_time = end_folder_time - start_folder_time
+        print('Time Elapsed to Process Folder:', elapsed_folder_time)
+
+        
 
 def main():
     abs_path = os.path.abspath(sys.argv[0])
